@@ -1,26 +1,15 @@
-use android_activity::{AndroidApp, MainEvent, PollEvent};
-use log::info;
+use macroquad::prelude::*;
 
-#[no_mangle]
-fn android_main(app: AndroidApp) {
-    android_logger::init_once(
-        android_logger::Config::default().with_max_level(log::LevelFilter::Info),
-    );
-
-    info!("Halo Odfiz! Aplikasi Rust NativeActivity berhasil jalan.");
-
+#[macroquad::main("OdfizApp")]
+async fn main() {
     loop {
-        app.poll_events(Some(std::time::Duration::from_millis(16)), |event| {
-            match event {
-                PollEvent::Main(MainEvent::SaveState { .. }) => {
-                    info!("Aplikasi menyimpan state...");
-                }
-                // Ganti Terminate menjadi Destroy
-                PollEvent::Main(MainEvent::Destroy) => {
-                    info!("Aplikasi ditutup.");
-                }
-                _ => {}
-            }
-        });
+        // Isi layar dengan warna merah terang
+        clear_background(RED);
+
+        // Gambar teks di tengah layar
+        draw_text("HALO ODFIZ!", 20.0, 100.0, 60.0, WHITE);
+        draw_text("Rust is Running!", 20.0, 180.0, 30.0, YELLOW);
+
+        next_frame().await
     }
 }

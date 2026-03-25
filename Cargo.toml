@@ -7,19 +7,16 @@ edition = "2021"
 crate-type = ["cdylib"]
 
 [dependencies]
-android-activity = { version = "0.6", features = ["native-activity"] }
-log = "0.4"
-android_logger = "0.13"
+macroquad = "0.4"
 
 [package.metadata.android]
 package = "com.odfiz.rustnative"
-label = "RustNativeApp"
+label = "Odfiz Rust App"
 build_targets = ["aarch64-linux-android"]
 target_sdk_version = 30
 min_sdk_version = 21
 build_tools_version = "30.0.3"
 
-# Perbaikan di sini: ganti 'keystore' menjadi 'path'
 [package.metadata.android.signing.release]
 path = "debug.keystore"
 keystore_password = "android"
