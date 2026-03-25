@@ -16,7 +16,6 @@ jobs:
       with:
         targets: aarch64-linux-android
 
-    # CACHE UNTUK CARGO & BINARY
     - name: Cache Cargo
       uses: actions/cache@v4
       with:
@@ -27,26 +26,23 @@ jobs:
           ~/.cargo/git/db/
           target/
         key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
-        restore-keys: |
-          ${{ runner.os }}-cargo-
 
     - name: Install cargo-apk
       run: |
         if ! command -v cargo-apk &> /dev/null; then
           cargo install cargo-apk
-        else
-          echo "cargo-apk already installed from cache"
         fi
 
     - name: Setup Android SDK
       uses: android-actions/setup-android@v3
 
-    - name: Install NDK
+    - name: Install NDK & Platform 30
       run: |
-        sdkmanager "ndk;26.1.10909125"
+        # Kita install manual Platform 30 dan NDK yang dibutuhkan
+        sdkmanager "platforms;android-30" "ndk;26.1.10909125" "build-tools;30.0.3"
         echo "ANDROID_NDK_HOME=$ANDROID_HOME/ndk/26.1.10909125" >> $GITHUB_ENV
 
-    - name: Build APK (Release Mode)
+    - name: Build APK
       run: cargo apk build --release
 
     - name: Upload APK

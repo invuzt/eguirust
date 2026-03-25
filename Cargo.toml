@@ -15,8 +15,10 @@ android_logger = "0.13"
 package = "com.odfiz.rustnative"
 label = "RustNativeApp"
 build_targets = ["aarch64-linux-android"]
-target_sdk_version = 34
+# Memaksa versi yang sering dicari cargo-apk secara default
+target_sdk_version = 30
 min_sdk_version = 21
+build_tools_version = "30.0.3"
 
 [profile.release]
 opt-level = "z"
