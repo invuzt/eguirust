@@ -1,4 +1,4 @@
-use android_activity::{AndroidApp, MainEvent, PollEvent};
+use android_activity::{AndroidApp, MainEvent, PollEvent, InputStatus};
 use log::info;
 use std::time::Duration;
 
@@ -17,10 +17,11 @@ fn android_main(app: AndroidApp) {
                     info!("Aplikasi ditutup.");
                 }
                 PollEvent::Wake => {
-                    // Cara yang benar untuk v0.6: pakai callback di dalam .next()
                     if let Ok(mut input_iter) = app.input_events_iter() {
                         while input_iter.next(|input_event| {
                             info!("Input terdeteksi: {:?}", input_event);
+                            // Kunci perbaikan: Kita harus mengembalikan status ini
+                            InputStatus::Handled
                         }) {}
                     }
                 }
