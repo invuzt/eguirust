@@ -41,10 +41,16 @@ jobs:
         sdkmanager "platforms;android-30" "ndk;26.1.10909125" "build-tools;30.0.3"
         echo "ANDROID_NDK_HOME=$ANDROID_HOME/ndk/26.1.10909125" >> $GITHUB_ENV
 
-    # Langkah Baru: Buat Keystore Sementara
     - name: Generate Debug Keystore
       run: |
         keytool -genkey -v -keystore debug.keystore -alias androiddebugkey -storepass android -keypass android -keyalg RSA -keysize 2048 -validity 10000 -dname "CN=Android Debug,O=Android,C=US"
 
     - name: Build APK (Release Mode)
       run: cargo apk build --release
+
+    # LANGKAH PENTING: Simpan hasil build agar bisa di-download
+    - name: Upload APK
+      uses: actions/upload-artifact@v4
+      with:
+        name: rust-native-app-release
+        path: target/release/apk/*.apk
