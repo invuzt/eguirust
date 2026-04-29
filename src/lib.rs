@@ -1,20 +1,21 @@
-use eframe::{egui, NativeOptions};
+use eframe::egui;
 
 #[no_mangle]
-fn android_main(app: eframe::winit::platform::android::activity::AndroidApp) {
+fn android_main(app: android_activity::AndroidApp) {
     android_logger::init_once(
         android_logger::Config::default().with_max_level(log::LevelFilter::Info),
     );
 
-    let options = NativeOptions {
-        android_app: Some(app),
-        ..Default::default()
-    };
+    let mut options = eframe::NativeOptions::default();
+    // Pada versi ini, android_app dipasang melalui winit_window_builder
+    options.android_app = Some(app);
 
     eframe::run_native(
         "Odfiz App",
         options,
-        Box::new(|_cc| Ok(Box::new(MyApp::default()))),
+        Box::new(|_cc| {
+            Ok(Box::new(MyApp::default()) as Box<dyn eframe::App>)
+        }),
     ).unwrap();
 }
 
@@ -55,6 +56,7 @@ impl eframe::App for MyApp {
 
             ui.add(egui::DragValue::new(&mut self.angka).prefix("Angka: "));
 
+            ui.add_space(20.0);
             if ui.button("Reset All").clicked() {
                 self.counter = 0;
                 self.nama.clear();
