@@ -22,20 +22,20 @@ jobs:
     - name: Setup Android SDK
       uses: android-actions/setup-android@v3
 
-    - name: Install NDK
-      run: sdkmanager "ndk;26.1.10909125"
+    - name: Install NDK & Platform 30
+      run: |
+        ${ANDROID_HOME}/cmdline-tools/latest/bin/sdkmanager --install "platforms;android-30" "ndk;26.1.10909125"
+        echo "ANDROID_NDK_HOME=${ANDROID_HOME}/ndk/26.1.10909125" >> $GITHUB_ENV
 
     - name: Generate Dummy Keystore
       run: |
         keytool -genkey -v -keystore debug.keystore -alias androiddebugkey -storepass android -keypass android -keyalg RSA -keysize 2048 -validity 10000 -dname "CN=Android Debug,O=Android,C=US"
 
     - name: Build APK (Release Mode)
-      run: |
-        export ANDROID_NDK_HOME=$ANDROID_HOME/ndk/26.1.10909125
-        cargo apk build --release
+      run: cargo apk build --release
 
     - name: Upload APK
       uses: actions/upload-artifact@v4
       with:
-        name: odfiz-net-simulator
+        name: odfiz-app
         path: target/release/apk/*.apk
