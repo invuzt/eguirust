@@ -1,94 +1,65 @@
-use android_activity::{AndroidApp, MainEvent, PollEvent};
-use egui_glow::painter::Painter;
-use std::time::{Duration, Instant};
+use eframe::{egui, NativeOptions};
 
 #[no_mangle]
-fn android_main(app: AndroidApp) {
-    let mut nama = String::new();
-    let mut angka: i32 = 0;
-    let mut counter = 0;
-    
-    // Inisialisasi Egui Context
-    let egui_ctx = egui::Context::default();
-    let mut egui_state = egui_android::State::new(&app);
-    let mut painter: Option<Painter> = None;
-    let start_time = Instant::now();
+fn android_main(app: eframe::winit::platform::android::activity::AndroidApp) {
+    android_logger::init_once(
+        android_logger::Config::default().with_max_level(log::LevelFilter::Info),
+    );
 
-    loop {
-        app.poll_events(Some(Duration::from_millis(16)), |event| {
-            // Berikan event ke egui-android untuk handle sentuhan/keyboard
-            egui_state.process_event(&event);
+    let options = NativeOptions {
+        android_app: Some(app),
+        ..Default::default()
+    };
 
-            match event {
-                PollEvent::Main(MainEvent::InitWindow { .. }) => {
-                    // Inisialisasi renderer saat window tersedia
-                    let native_window = app.native_window().unwrap();
-                    let (gl, shader_prefix) = unsafe {
-                        // Di sini kita membuat context GLES
-                        egui_android::opengl::create_context(&native_window).expect("Gagal membuat GL context")
-                    };
-                    painter = Some(Painter::new(std::sync::Arc::new(gl), shader_prefix, None));
-                }
-                PollEvent::Main(MainEvent::TerminateWindow { .. }) => {
-                    painter = None; // Lepas renderer saat window ditutup
-                }
-                PollEvent::Main(MainEvent::Destroy) => return,
-                _ => {}
-            }
-        });
+    eframe::run_native(
+        "Odfiz App",
+        options,
+        Box::new(|_cc| Ok(Box::new(MyApp::default()))),
+    ).unwrap();
+}
 
-        if let Some(ref mut painter) = painter {
-            let raw_input = egui_state.take_egui_input(&app);
+struct MyApp {
+    nama: String,
+    angka: i32,
+    counter: i32,
+}
+
+impl Default for MyApp {
+    fn default() -> Self {
+        Self {
+            nama: String::new(),
+            angka: 0,
+            counter: 0,
+        }
+    }
+}
+
+impl eframe::App for MyApp {
+    fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
+        egui::CentralPanel::default().show(ctx, |ui| {
+            ui.heading("Odfiz Rust Native");
+            ui.add_space(10.0);
+
+            ui.label(format!("Counter: {}", self.counter));
             
-            // Definisikan UI
-            let full_output = egui_ctx.run(raw_input, |ctx| {
-                egui::CentralPanel::default().show(ctx, |ui| {
-                    ui.heading("Rust Native UI (Egui)");
-                    ui.add_space(10.0);
+            if ui.button("Tambah Counter").clicked() {
+                self.counter += 1;
+            }
 
-                    ui.label(format!("Waktu berjalan: {:.1}s", start_time.elapsed().as_secs_f32()));
-                    ui.label(format!("Tombol ditekan: {} kali", counter));
+            ui.separator();
 
-                    ui.separator();
-
-                    // Input Teks
-                    ui.horizontal(|ui| {
-                        ui.label("Nama:");
-                        ui.text_edit_singleline(&mut nama);
-                    });
-
-                    // Input Angka
-                    ui.horizontal(|ui| {
-                        ui.label("Angka:");
-                        ui.add(egui::DragValue::new(&mut angka));
-                    });
-
-                    ui.add_space(10.0);
-
-                    // Button
-                    if ui.button("Klik Saya!").clicked() {
-                        counter += 1;
-                    }
-
-                    if ui.button("Reset").clicked() {
-                        counter = 0;
-                        nama.clear();
-                        angka = 0;
-                    }
-                });
+            ui.horizontal(|ui| {
+                ui.label("Nama: ");
+                ui.text_edit_singleline(&mut self.nama);
             });
 
-            // Gambar ke layar
-            let window = app.native_window().unwrap();
-            let width = window.width() as u32;
-            let height = window.height() as u32;
-            
-            painter.paint_and_update_textures(
-                [width, height],
-                egui_ctx.pixels_per_point(),
-                full_output.shapes,
-                &full_output.textures_delta,
-            );
-        }
+            ui.add(egui::DragValue::new(&mut self.angka).prefix("Angka: "));
+
+            if ui.button("Reset All").clicked() {
+                self.counter = 0;
+                self.nama.clear();
+                self.angka = 0;
+            }
+        });
     }
 }

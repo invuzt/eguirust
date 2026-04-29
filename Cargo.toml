@@ -8,27 +8,16 @@ name = "rust_native_app"
 crate-type = ["cdylib"]
 
 [dependencies]
-android-activity = { version = "0.6", features = ["native-activity"] }
-ndk = "0.8"
-ndk-sys = "0.5"
-egui = "0.27"
-egui_glow = "0.27"
-glow = "0.13"
-winit = { version = "0.29", features = ["android-native-activity"] }
-egui-winit = { version = "0.27", default-features = false, features = ["android-native-activity"] }
+eframe = { version = "0.27", default-features = false, features = ["glow", "android-native-activity", "default_fonts"] }
+log = "0.4"
+android_logger = "0.13"
 
 [package.metadata.android]
 package = "com.odfiz.rustnative"
-label = "Odfiz Color Test"
+label = "Odfiz UI Test"
 build_targets = ["aarch64-linux-android"]
 target_sdk_version = 30
 min_sdk_version = 21
-
-[package.metadata.android.signing.release]
-path = "debug.keystore"
-keystore_password = "android"
-key_alias = "androiddebugkey"
-key_password = "android"
 
 [profile.release]
 opt-level = "z"
