@@ -1,20 +1,23 @@
+#![cfg(target_os = "android")]
 use eframe::egui;
 
 #[no_mangle]
-#[cfg(target_os = "android")]
 fn android_main(app: android_activity::AndroidApp) {
-    android_logger::init_once(
-        android_logger::Config::default().with_max_level(log::LevelFilter::Info),
-    );
+    use winit::platform::android::EventLoopBuilderExtAndroid;
+    android_logger::init_once(android_logger::Config::default().with_max_level(log::LevelFilter::Info));
 
     let mut options = eframe::NativeOptions::default();
-    // Gunakan akses field secara aman
-    options.android_app = Some(app);
+    
+    // INI KUNCINYA: Pakai event_loop_builder, jangan direct field
+    options.event_loop_builder = Some(Box::new(move |builder| {
+        builder.with_android_app(app);
+    }));
 
     let _ = eframe::run_native(
         "Odfiz App",
         options,
         Box::new(|_cc| {
+            // Kembalikan Box<dyn eframe::App> langsung
             Ok(Box::new(MyApp::default()))
         }),
     );

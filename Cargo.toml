@@ -4,11 +4,11 @@ version = "0.1.0"
 edition = "2021"
 
 [lib]
-name = "rust_native_app"
 crate-type = ["cdylib"]
 
 [dependencies]
-eframe = { version = "0.27", default-features = false, features = ["glow", "android-native-activity", "default_fonts"] }
+eframe = { version = "0.27", default-features = false, features = ["android-native-activity", "wgpu", "glow"] }
+winit = { version = "0.29", features = ["android-native-activity"] }
 android-activity = "0.5"
 log = "0.4"
 android_logger = "0.13"
@@ -19,10 +19,3 @@ label = "Odfiz UI Test"
 build_targets = ["aarch64-linux-android"]
 target_sdk_version = 30
 min_sdk_version = 21
-
-[profile.release]
-opt-level = "z"
-lto = true
-codegen-units = 1
-panic = "abort"
-strip = true
