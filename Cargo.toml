@@ -7,15 +7,29 @@ edition = "2021"
 crate-type = ["cdylib"]
 
 [dependencies]
-eframe = { version = "0.27", default-features = false, features = ["android-native-activity", "wgpu", "glow"] }
+eframe = { version = "0.27", default-features = false, features = ["android-native-activity", "wgpu", "glow", "default_fonts"] }
 winit = { version = "0.29", features = ["android-native-activity"] }
 android-activity = "0.5"
 log = "0.4"
 android_logger = "0.13"
+rand = "0.8"
 
 [package.metadata.android]
 package = "com.odfiz.rustnative"
-label = "Odfiz UI Test"
+label = "Odfiz RT/RW Net"
 build_targets = ["aarch64-linux-android"]
 target_sdk_version = 30
 min_sdk_version = 21
+
+[package.metadata.android.signing.release]
+path = "debug.keystore"
+keystore_password = "android"
+key_alias = "androiddebugkey"
+key_password = "android"
+
+[profile.release]
+opt-level = "z"
+lto = true
+codegen-units = 1
+panic = "abort"
+strip = true

@@ -16,41 +16,26 @@ jobs:
       with:
         targets: aarch64-linux-android
 
-    - name: Cache Cargo
-      uses: actions/cache@v4
-      with:
-        path: |
-          ~/.cargo/bin/
-          ~/.cargo/registry/index/
-          ~/.cargo/registry/cache/
-          ~/.cargo/git/db/
-          target/
-        key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
-
     - name: Install cargo-apk
-      run: |
-        if ! command -v cargo-apk &> /dev/null; then
-          cargo install cargo-apk
-        fi
+      run: cargo install cargo-apk
 
     - name: Setup Android SDK
       uses: android-actions/setup-android@v3
 
-    - name: Install NDK & Platform 30
-      run: |
-        sdkmanager "platforms;android-30" "ndk;26.1.10909125" "build-tools;30.0.3"
-        echo "ANDROID_NDK_HOME=$ANDROID_HOME/ndk/26.1.10909125" >> $GITHUB_ENV
+    - name: Install NDK
+      run: sdkmanager "ndk;26.1.10909125"
 
-    - name: Generate Debug Keystore
+    - name: Generate Dummy Keystore
       run: |
         keytool -genkey -v -keystore debug.keystore -alias androiddebugkey -storepass android -keypass android -keyalg RSA -keysize 2048 -validity 10000 -dname "CN=Android Debug,O=Android,C=US"
 
     - name: Build APK (Release Mode)
-      run: cargo apk build --release
+      run: |
+        export ANDROID_NDK_HOME=$ANDROID_HOME/ndk/26.1.10909125
+        cargo apk build --release
 
-    # LANGKAH PENTING: Simpan hasil build agar bisa di-download
     - name: Upload APK
       uses: actions/upload-artifact@v4
       with:
-        name: rust-native-app-release
+        name: odfiz-net-simulator
         path: target/release/apk/*.apk
