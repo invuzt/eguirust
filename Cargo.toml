@@ -8,15 +8,10 @@ name = "rust_native_app"
 crate-type = ["cdylib"]
 
 [dependencies]
-# Tambahkan android-activity secara eksplisit
+eframe = { version = "0.27", default-features = false, features = ["glow", "android-native-activity", "default_fonts"] }
 android-activity = "0.5"
-android_logger = "0.13"
 log = "0.4"
-
-[dependencies.eframe]
-version = "0.27"
-default-features = false
-features = ["glow", "android-native-activity", "default_fonts"]
+android_logger = "0.13"
 
 [package.metadata.android]
 package = "com.odfiz.rustnative"

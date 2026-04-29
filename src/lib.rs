@@ -1,25 +1,23 @@
 use eframe::egui;
 
 #[no_mangle]
+#[cfg(target_os = "android")]
 fn android_main(app: android_activity::AndroidApp) {
     android_logger::init_once(
         android_logger::Config::default().with_max_level(log::LevelFilter::Info),
     );
 
-    // Inisialisasi options dengan cara langsung
-    let options = eframe::NativeOptions {
-        android_app: Some(app),
-        ..Default::default()
-    };
+    let mut options = eframe::NativeOptions::default();
+    // Gunakan akses field secara aman
+    options.android_app = Some(app);
 
-    eframe::run_native(
+    let _ = eframe::run_native(
         "Odfiz App",
         options,
         Box::new(|_cc| {
-            // Langsung kembalikan Box, jangan dibungkus Ok()
-            Box::new(MyApp::default())
+            Ok(Box::new(MyApp::default()))
         }),
-    ).unwrap();
+    );
 }
 
 struct MyApp {
