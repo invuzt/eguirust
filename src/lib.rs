@@ -8,7 +8,6 @@ fn android_main(app: android_activity::AndroidApp) {
 
     let mut options = eframe::NativeOptions::default();
     
-    // INI KUNCINYA: Pakai event_loop_builder, jangan direct field
     options.event_loop_builder = Some(Box::new(move |builder| {
         builder.with_android_app(app);
     }));
@@ -17,8 +16,8 @@ fn android_main(app: android_activity::AndroidApp) {
         "Odfiz App",
         options,
         Box::new(|_cc| {
-            // Kembalikan Box<dyn eframe::App> langsung
-            Ok(Box::new(MyApp::default()))
+            // Perbaikan: Langsung kembalikan Box tanpa Result (Ok)
+            Box::new(MyApp::default()) as Box<dyn eframe::App>
         }),
     );
 }
