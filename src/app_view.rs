@@ -1,7 +1,6 @@
 use eframe::egui;
 use crate::app_logic::AppState;
 
-// "CSS" - Definisi Style Button
 fn primary_button_style(ui: &mut egui::Ui, label: &str) -> egui::Response {
     ui.add_sized(
         [200.0, 50.0],
@@ -11,20 +10,13 @@ fn primary_button_style(ui: &mut egui::Ui, label: &str) -> egui::Response {
     )
 }
 
-// "HTML" - Definisi Layout
 pub fn render_ui(ctx: &egui::Context, state: &mut AppState) {
     ctx.set_visuals(egui::Visuals::dark());
-
     egui::CentralPanel::default().show(ctx, |ui| {
-        // Safe Area Padding
         ui.add_space(60.0);
-
-        // Layout Rata Tengah Vertikal & Horizontal
         ui.vertical_centered(|ui| {
             ui.heading(&state.app_name);
             ui.add_space(20.0);
-
-            // Container Box (Ibarat Div dengan border)
             egui::Frame::none()
                 .fill(egui::Color32::from_gray(30))
                 .rounding(15.0)
@@ -32,9 +24,7 @@ pub fn render_ui(ctx: &egui::Context, state: &mut AppState) {
                 .show(ui, |ui| {
                     ui.label(format!("Nodes: {}", state.nodes.len()));
                     ui.add_space(15.0);
-
-                    // Panggil "CSS" Button
-                    if primary_button_style(ui, "➕ ADD NODE").clicked() {
+                    if primary_button_style(ui, " ➕ ADD NODE").clicked() {
                         state.add_node();
                     }
                 });

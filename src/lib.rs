@@ -26,6 +26,8 @@ fn android_main(app: android_activity::AndroidApp) {
         "Odfiz App",
         options,
         Box::new(move |_cc| {
+            // Catat: Jika default_fonts mati, teks akan hilang 
+            // kecuali kamu load font manual di sini menggunakan _cc.egui_ctx.set_fonts()
             Box::new(OdfizApp { state }) as Box<dyn eframe::App>
         }),
     );
@@ -34,7 +36,6 @@ fn android_main(app: android_activity::AndroidApp) {
 impl eframe::App for OdfizApp {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
         if let Ok(mut state) = self.state.lock() {
-            // Panggil file View untuk menggambar UI
             app_view::render_ui(ctx, &mut state);
         }
     }

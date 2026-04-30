@@ -18,7 +18,6 @@ impl AppState {
             app_name: "ODFIZ CORE".to_string(),
         }
     }
-
     pub fn add_node(&mut self) {
         let id = self.nodes.len();
         self.nodes.insert(format!("N-{}", id), Node {
