@@ -1,4 +1,3 @@
-#![feature(panic_immediate_abort)]
 #![cfg(target_os = "android")]
 mod app_logic;
 mod app_view;
@@ -27,6 +26,7 @@ fn android_main(app: android_activity::AndroidApp) {
         "Odfiz App",
         options,
         Box::new(move |cc| {
+            // Load Font agar teks tidak hilang (karena default_fonts dimatikan)
             let mut fonts = egui::FontDefinitions::default();
             fonts.font_data.insert(
                 "custom_font".to_owned(),

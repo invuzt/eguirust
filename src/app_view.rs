@@ -22,7 +22,7 @@ pub fn render_ui(ctx: &egui::Context, state: &mut AppState) {
                 .rounding(15.0)
                 .inner_margin(20.0)
                 .show(ui, |ui| {
-                    ui.label(format!("Nodes Active: {}", state.nodes.len()));
+                    ui.label(format!("Nodes Connect: {}", state.nodes.len()));
                     ui.add_space(15.0);
                     if primary_button_style(ui, " ➕ ADD NODE").clicked() {
                         state.add_node();

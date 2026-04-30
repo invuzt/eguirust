@@ -35,8 +35,7 @@ jobs:
         keytool -genkey -v -keystore debug.keystore -alias androiddebugkey -storepass android -keypass android -keyalg RSA -keysize 2048 -validity 10000 -dname "CN=Android Debug,O=Android,C=US"
 
     - name: Build APK (Release Mode)
-      run: cargo apk build --release -Z build-std=std,panic_abort -Z build-std-features=panic_immediate_abort
-
+      run: cargo apk build --release
 
     - name: Upload APK
       uses: actions/upload-artifact@v4

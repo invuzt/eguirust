@@ -7,6 +7,7 @@ edition = "2021"
 crate-type = ["cdylib"]
 
 [dependencies]
+# Feature 'default_fonts' dimatikan total
 eframe = { version = "0.27", default-features = false, features = ["android-native-activity", "wgpu", "glow"] }
 winit = { version = "0.29", features = ["android-native-activity"] }
 android-activity = "0.5"
@@ -31,9 +32,9 @@ key_alias = "androiddebugkey"
 key_password = "android"
 
 [profile.release]
-opt-level = "z"
-lto = true
-codegen-units = 1
-panic = "abort"
-strip = true
-incremental = false
+opt-level = "z"      # Fokus ke ukuran binary terkecil
+lto = true           # Link Time Optimization (WAJIB untuk size)
+codegen-units = 1    # Mengurangi paralelisme demi optimasi lebih dalam
+panic = "abort"      # Menghapus overhead unwinding
+strip = true         # Menghapus simbol debug dan tabel nama
+incremental = false  # Memastikan build bersih untuk optimasi maksimal
