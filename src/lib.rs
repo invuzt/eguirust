@@ -1,3 +1,4 @@
+#![feature(panic_immediate_abort)]
 #![cfg(target_os = "android")]
 mod app_logic;
 mod app_view;
