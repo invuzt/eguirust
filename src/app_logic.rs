@@ -1,6 +1,7 @@
 use std::collections::HashMap;
 use eframe::egui;
 
+#[allow(dead_code)]
 pub struct Node {
     pub pos: egui::Pos2,
     pub is_server: bool,
@@ -15,7 +16,7 @@ impl AppState {
     pub fn new() -> Self {
         Self {
             nodes: HashMap::new(),
-            app_name: "ODFIZ CORE".to_string(),
+            app_name: "VUZT CORE".to_string(),
         }
     }
     pub fn add_node(&mut self) {
