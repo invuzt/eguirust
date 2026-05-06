@@ -24,12 +24,12 @@ impl AppState {
 
     pub fn add_node(&mut self) {
         let id = self.nodes.len();
-        // Logika posisi: menyebar ke samping lalu ke bawah (grid-like)
-        let x = 30.0 + ((id % 3) as f32 * 100.0);
-        let y = 120.0 + ((id / 3) as f32 * 60.0);
+        // Spawn dengan sedikit offset agar tidak menumpuk tepat di satu titik
+        let x = 50.0 + (id as f32 * 20.0 % 200.0);
+        let y = 150.0 + (id as f32 * 30.0 % 300.0);
         
         self.nodes.push(Node {
-            label: format!("ID:{}", id),
+            label: format!("NODE {}", id),
             pos: egui::pos2(x, y),
         });
     }
