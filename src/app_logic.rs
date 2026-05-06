@@ -15,7 +15,7 @@ pub struct AppState {
 impl AppState {
     pub fn new() -> Self {
         Self {
-            app_name: "VUZT IDE".to_string(),
+            app_name: "VUZT NATIVE".to_string(),
             selected_node_idx: None,
             nodes: Vec::new(),
             show_kb: false,
@@ -24,11 +24,13 @@ impl AppState {
 
     pub fn add_node(&mut self) {
         let id = self.nodes.len();
-        let new_node = Node {
-            label: format!("Node_{}", id),
-            // Simulasi posisi acak agar tidak tumpang tindih
-            pos: egui::pos2(50.0 + (id as f32 * 10.0), 100.0 + (id as f32 * 20.0)),
-        };
-        self.nodes.push(new_node);
+        // Logika posisi: menyebar ke samping lalu ke bawah (grid-like)
+        let x = 30.0 + ((id % 3) as f32 * 100.0);
+        let y = 120.0 + ((id / 3) as f32 * 60.0);
+        
+        self.nodes.push(Node {
+            label: format!("ID:{}", id),
+            pos: egui::pos2(x, y),
+        });
     }
 }
