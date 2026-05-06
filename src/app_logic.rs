@@ -9,6 +9,7 @@ pub struct Agent {
 pub struct Connection {
     pub from: usize,
     pub to: usize,
+    pub message: String, // Pesan yang dibawa titik data
 }
 
 pub struct AppState {
@@ -16,7 +17,7 @@ pub struct AppState {
     pub connections: Vec<Connection>,
     pub selected_agent: Option<usize>,
     pub show_kb: bool,
-    pub is_running: bool, // Status simulasi
+    pub is_running: bool,
 }
 
 impl AppState {
@@ -38,8 +39,8 @@ impl AppState {
             egui::Color32::from_rgb(200, 100, 255),
         ];
         
-        let x = 60.0 + (id as f32 * 30.0 % 200.0);
-        let y = 150.0 + (id as f32 * 80.0 % 400.0);
+        let x = 60.0 + (id as f32 * 40.0 % 240.0);
+        let y = 160.0 + (id as f32 * 90.0 % 450.0);
 
         self.agents.push(Agent {
             name: format!("AGENT_{}", id),
@@ -48,7 +49,13 @@ impl AppState {
         });
         
         if id > 0 {
-            self.connections.push(Connection { from: id - 1, to: id });
+            // Berikan pesan simulasi otomatis antar agent
+            let msg = match id {
+                1 => "Analyzing...".to_string(),
+                2 => "Executing...".to_string(),
+                _ => "Passing Data...".to_string(),
+            };
+            self.connections.push(Connection { from: id - 1, to: id, message: msg });
         }
     }
 }

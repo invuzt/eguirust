@@ -8,48 +8,50 @@ pub fn render_ui(ctx: &egui::Context, state: &mut AppState) {
 
     egui::CentralPanel::default().show(ctx, |ui| {
         ui.horizontal(|ui| {
-            ui.heading("VUZT FLOW");
+            ui.heading(egui::RichText::new("VUZT AGENTIC").color(egui::Color32::WHITE).strong());
             ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
                 if ui.button("ADD AGENT").clicked() { state.add_agent(); }
-                if ui.button(if state.is_running { "STOP" } else { "RUN SIM" }).clicked() {
-                    state.is_running = !state.is_running;
-                }
+                let btn_text = if state.is_running { "STOP SIM" } else { "START SIM" };
+                if ui.button(btn_text).clicked() { state.is_running = !state.is_running;}
             });
         });
         ui.separator();
 
         let painter = ui.painter();
-        let time = ctx.input(|i| i.time); // Ambil waktu sistem untuk animasi
+        let time = ctx.input(|i| i.time);
 
-        // --- 1. Gambar Garis dengan Panah & Animasi ---
+        // --- 1. Render Connections & Animated Messages ---
         for conn in &state.connections {
             if let (Some(a), Some(b)) = (state.agents.get(conn.from), state.agents.get(conn.to)) {
                 let start = a.pos + egui::vec2(50.0, 20.0);
                 let end = b.pos + egui::vec2(50.0, 20.0);
                 
-                // Gambar Garis Utama
-                painter.line_segment([start, end], egui::Stroke::new(1.5, egui::Color32::DARK_GRAY));
+                // Garis Abu-abu
+                painter.line_segment([start, end], egui::Stroke::new(1.0, egui::Color32::from_gray(60)));
 
-                // Hitung Arah Panah
-                let vec = end - start;
-                let dir = vec / vec.length();
-                let arrow_pos = end - dir * 10.0;
-                let side = egui::vec2(-dir.y, dir.x) * 5.0;
-                
-                painter.line_segment([end, arrow_pos + side], egui::Stroke::new(2.0, egui::Color32::GRAY));
-                painter.line_segment([end, arrow_pos - side], egui::Stroke::new(2.0, egui::Color32::GRAY));
-
-                // Simulasi Titik Data Bergerak
                 if state.is_running {
-                    let t = (time * 0.8 % 1.0) as f32; // Kecepatan gerak
-                    let dot_pos = start + vec * t;
-                    painter.circle_filled(dot_pos, 4.0, egui::Color32::YELLOW);
-                    ctx.request_repaint(); // Paksa render ulang agar animasi jalan
+                    let t = (time * 0.7 % 1.0) as f32; // Progress 0.0 ke 1.0
+                    let dot_pos = start + (end - start) * t;
+
+                    // Gambar Titik Data (Kuning)
+                    painter.circle_filled(dot_pos, 4.5, egui::Color32::from_rgb(255, 220, 0));
+
+                    // Tampilkan Pesan jika titik sudah jalan lebih dari setengah
+                    if t > 0.3 && t < 0.9 {
+                        painter.text(
+                            dot_pos + egui::vec2(0.0, -15.0),
+                            egui::Align2::CENTER_BOTTOM,
+                            &conn.message,
+                            egui::FontId::proportional(11.0),
+                            egui::Color32::LIGHT_YELLOW,
+                        );
+                    }
+                    ctx.request_repaint(); 
                 }
             }
         }
 
-        // --- 2. Render Agent (Drag & Interaction) ---
+        // --- 2. Render Agents ---
         for i in 0..state.agents.len() {
             let id = egui::Id::new("ag").with(i);
             let mut pos = state.agents[i].pos;
@@ -61,7 +63,8 @@ pub fn render_ui(ctx: &egui::Context, state: &mut AppState) {
                 state.agents[i].pos = pos;
             }
 
-            painter.rect_filled(rect, egui::Rounding::same(8.0), state.agents[i].color);
+            // Box Agent
+            painter.rect_filled(rect, egui::Rounding::same(6.0), state.agents[i].color);
             painter.text(rect.center(), egui::Align2::CENTER_CENTER, &state.agents[i].name, egui::FontId::proportional(14.0), egui::Color32::BLACK);
 
             if resp.clicked() {
