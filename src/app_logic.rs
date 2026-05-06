@@ -16,7 +16,7 @@ pub struct AppState {
     pub agents: Vec<Agent>,
     pub connections: Vec<Connection>,
     pub selected_agent: Option<usize>,
-    pub link_source: Option<usize>, // Untuk simpan Agent pertama saat buat garis
+    pub link_source: Option<usize>,
     pub show_kb: bool,
     pub is_running: bool,
 }
@@ -37,17 +37,36 @@ impl AppState {
         let id = self.agents.len();
         self.agents.push(Agent {
             name: format!("AGENT_{}", id),
-            pos: egui::pos2(100.0, 200.0),
+            pos: egui::pos2(100.0, 250.0),
             color: egui::Color32::from_rgb(0, 120, 255),
+        });
+    }
+
+    pub fn spawn_child(&mut self, parent_idx: usize) {
+        let parent_pos = self.agents[parent_idx].pos;
+        let id = self.agents.len();
+        
+        // Spawn di sebelah kanan parent
+        let new_pos = parent_pos + egui::vec2(150.0, 0.0);
+        
+        self.agents.push(Agent {
+            name: format!("AGENT_{}", id),
+            pos: new_pos,
+            color: egui::Color32::from_rgb(0, 200, 150),
+        });
+
+        // Otomatis buat koneksi
+        self.connections.push(Connection {
+            from: parent_idx,
+            to: id,
+            message: "New Task".to_string(),
         });
     }
 
     pub fn delete_selected(&mut self) {
         if let Some(idx) = self.selected_agent {
             self.agents.remove(idx);
-            // Hapus semua koneksi yang melibatkan agent ini
             self.connections.retain(|c| c.from != idx && c.to != idx);
-            // Re-index koneksi yang tersisa agar tidak crash
             for c in &mut self.connections {
                 if c.from > idx { c.from -= 1; }
                 if c.to > idx { c.to -= 1; }
