@@ -9,13 +9,14 @@ pub struct Agent {
 pub struct Connection {
     pub from: usize,
     pub to: usize,
-    pub message: String, // Pesan yang dibawa titik data
+    pub message: String,
 }
 
 pub struct AppState {
     pub agents: Vec<Agent>,
     pub connections: Vec<Connection>,
     pub selected_agent: Option<usize>,
+    pub link_source: Option<usize>, // Untuk simpan Agent pertama saat buat garis
     pub show_kb: bool,
     pub is_running: bool,
 }
@@ -26,6 +27,7 @@ impl AppState {
             agents: Vec::new(),
             connections: Vec::new(),
             selected_agent: None,
+            link_source: None,
             show_kb: false,
             is_running: false,
         }
@@ -33,29 +35,25 @@ impl AppState {
 
     pub fn add_agent(&mut self) {
         let id = self.agents.len();
-        let colors = [
-            egui::Color32::from_rgb(0, 150, 255),
-            egui::Color32::from_rgb(0, 255, 150),
-            egui::Color32::from_rgb(200, 100, 255),
-        ];
-        
-        let x = 60.0 + (id as f32 * 40.0 % 240.0);
-        let y = 160.0 + (id as f32 * 90.0 % 450.0);
-
         self.agents.push(Agent {
             name: format!("AGENT_{}", id),
-            pos: egui::pos2(x, y),
-            color: colors[id % colors.len()],
+            pos: egui::pos2(100.0, 200.0),
+            color: egui::Color32::from_rgb(0, 120, 255),
         });
-        
-        if id > 0 {
-            // Berikan pesan simulasi otomatis antar agent
-            let msg = match id {
-                1 => "Analyzing...".to_string(),
-                2 => "Executing...".to_string(),
-                _ => "Passing Data...".to_string(),
-            };
-            self.connections.push(Connection { from: id - 1, to: id, message: msg });
+    }
+
+    pub fn delete_selected(&mut self) {
+        if let Some(idx) = self.selected_agent {
+            self.agents.remove(idx);
+            // Hapus semua koneksi yang melibatkan agent ini
+            self.connections.retain(|c| c.from != idx && c.to != idx);
+            // Re-index koneksi yang tersisa agar tidak crash
+            for c in &mut self.connections {
+                if c.from > idx { c.from -= 1; }
+                if c.to > idx { c.to -= 1; }
+            }
+            self.selected_agent = None;
+            self.show_kb = false;
         }
     }
 }
