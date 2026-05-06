@@ -19,6 +19,9 @@ pub struct AppState {
     pub link_source: Option<usize>,
     pub show_kb: bool,
     pub is_running: bool,
+    // Navigasi Canvas
+    pub view_offset: egui::Vec2,
+    pub zoom_factor: f32,
 }
 
 impl AppState {
@@ -30,14 +33,18 @@ impl AppState {
             link_source: None,
             show_kb: false,
             is_running: false,
+            view_offset: egui::vec2(0.0, 0.0),
+            zoom_factor: 1.0,
         }
     }
 
     pub fn add_agent(&mut self) {
         let id = self.agents.len();
+        // Spawn relatif terhadap view agar muncul di tengah layar yang terlihat
+        let spawn_pos = egui::pos2(150.0, 300.0);
         self.agents.push(Agent {
             name: format!("AGENT_{}", id),
-            pos: egui::pos2(100.0, 250.0),
+            pos: spawn_pos,
             color: egui::Color32::from_rgb(0, 120, 255),
         });
     }
@@ -45,22 +52,13 @@ impl AppState {
     pub fn spawn_child(&mut self, parent_idx: usize) {
         let parent_pos = self.agents[parent_idx].pos;
         let id = self.agents.len();
-        
-        // Spawn di sebelah kanan parent
         let new_pos = parent_pos + egui::vec2(150.0, 0.0);
-        
         self.agents.push(Agent {
             name: format!("AGENT_{}", id),
             pos: new_pos,
             color: egui::Color32::from_rgb(0, 200, 150),
         });
-
-        // Otomatis buat koneksi
-        self.connections.push(Connection {
-            from: parent_idx,
-            to: id,
-            message: "New Task".to_string(),
-        });
+        self.connections.push(Connection { from: parent_idx, to: id, message: "Sync".to_string() });
     }
 
     pub fn delete_selected(&mut self) {
