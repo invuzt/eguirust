@@ -62,7 +62,7 @@ impl eframe::App for VuztApp {
                 .resizable(false)
                 .show(ctx, |ui| {
                     ui.add_space(10.0);
-                    crate::keyboard::render_keyboard(ui, &mut state.app_name, &mut state.show_kb);
+                    crate::keyboard::render_keyboard(ui, &mut state);
                     ui.add_space(10.0);
                 });
         }

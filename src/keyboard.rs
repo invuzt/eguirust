@@ -1,6 +1,7 @@
 use eframe::egui;
+use crate::app_logic::AppState;
 
-pub fn render_keyboard(ui: &mut egui::Ui, target_text: &mut String, show_kb: &mut bool) {
+pub fn render_keyboard(ui: &mut egui::Ui, state: &mut AppState) {
     ui.group(|ui| {
         ui.style_mut().spacing.item_spacing = egui::vec2(6.0, 8.0);
         
@@ -15,7 +16,7 @@ pub fn render_keyboard(ui: &mut egui::Ui, target_text: &mut String, show_kb: &mu
             ui.horizontal(|ui| {
                 for key in row {
                     if ui.add_sized([32.0, 42.0], egui::Button::new(key)).clicked() {
-                        target_text.push_str(&key.to_lowercase());
+                        state.app_name.push_str(&key.to_lowercase());
                     }
                 }
             });
@@ -23,13 +24,13 @@ pub fn render_keyboard(ui: &mut egui::Ui, target_text: &mut String, show_kb: &mu
 
         ui.horizontal(|ui| {
             if ui.add_sized([100.0, 42.0], egui::Button::new("SPASI")).clicked() {
-                target_text.push(' ');
+                state.app_name.push(' ');
             }
             if ui.add_sized([100.0, 42.0], egui::Button::new("HAPUS")).clicked() {
-                target_text.pop();
+                state.app_name.pop();
             }
             if ui.add_sized([100.0, 42.0], egui::Button::new("TUTUP")).clicked() {
-                *show_kb = false;
+                state.show_kb = false;
             }
         });
     });
