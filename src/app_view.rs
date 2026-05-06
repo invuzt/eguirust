@@ -2,61 +2,55 @@ use eframe::egui;
 use crate::app_logic::AppState;
 
 pub fn render_ui(ctx: &egui::Context, state: &mut AppState) {
-    // 1. Status Bar Area (Padding Extra Safe)
-    egui::TopBottomPanel::top("status_bar")
-        .frame(egui::Frame::none().fill(egui::Color32::from_rgb(10, 10, 10)))
-        .show(ctx, |ui| {
-            ui.add_space(50.0); 
-        });
+    // Top Panel untuk Safe Area
+    egui::TopBottomPanel::top("top_p").frame(egui::Frame::none().fill(egui::Color32::BLACK)).show(ctx, |ui| {
+        ui.add_space(55.0);
+    });
 
     egui::CentralPanel::default().show(ctx, |ui| {
-        // Toolbar Atas
         ui.horizontal(|ui| {
-            ui.heading(egui::RichText::new("VUZT").color(egui::Color32::WHITE).strong());
+            ui.heading("VUZT AGENT SIM");
             ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
-                if ui.button("ADD NODE").clicked() {
-                    state.add_node();
+                if ui.button("ADD AGENT").clicked() {
+                    state.add_agent();
                 }
             });
         });
         ui.separator();
 
-        // 2. Render & Drag Logic
-        for i in 0..state.nodes.len() {
-            let node_id = egui::Id::new("node_drag").with(i);
-            
-            // Ambil data node secara terpisah untuk menghindari borrow conflict
-            let mut current_pos = state.nodes[i].pos;
-            let current_label = state.nodes[i].label.clone();
-            
-            let node_rect = egui::Rect::from_min_size(current_pos, egui::vec2(100.0, 40.0));
-            let response = ui.interact(node_rect, node_id, egui::Sense::drag());
+        let painter = ui.painter();
 
-            if response.dragged() {
-                current_pos += response.drag_delta();
-                // Update posisi asli di state
-                state.nodes[i].pos = current_pos;
+        // --- 1. Gambar Garis (Connections) ---
+        for conn in &state.connections {
+            if let (Some(a), Some(b)) = (state.agents.get(conn.from), state.agents.get(conn.to)) {
+                painter.line_segment(
+                    [a.pos + egui::vec2(50.0, 20.0), b.pos + egui::vec2(50.0, 20.0)],
+                    egui::Stroke::new(2.0, egui::Color32::GRAY)
+                );
+            }
+        }
+
+        // --- 2. Gambar & Drag Agents ---
+        for i in 0..state.agents.len() {
+            let agent_id = egui::Id::new("agent").with(i);
+            let mut agent_pos = state.agents[i].pos;
+            let agent_color = state.agents[i].color;
+            let agent_name = state.agents[i].name.clone();
+
+            let rect = egui::Rect::from_min_size(agent_pos, egui::vec2(100.0, 40.0));
+            let resp = ui.interact(rect, agent_id, egui::Sense::drag());
+
+            if resp.dragged() {
+                agent_pos += resp.drag_delta();
+                state.agents[i].pos = agent_pos;
             }
 
-            // Gambar Node (Warna Biru Neon agar kontras)
-            let fill_color = if response.dragged() {
-                egui::Color32::from_rgb(0, 220, 255) // Saat ditarik
-            } else {
-                egui::Color32::from_rgb(0, 100, 255) // Diam
-            };
+            // Visual Agent
+            painter.rect_filled(rect, egui::Rounding::same(12.0), agent_color);
+            painter.text(rect.center(), egui::Align2::CENTER_CENTER, agent_name, egui::FontId::proportional(14.0), egui::Color32::BLACK);
 
-            ui.painter().rect_filled(node_rect, egui::Rounding::same(8.0), fill_color);
-            ui.painter().text(
-                node_rect.center(),
-                egui::Align2::CENTER_CENTER,
-                current_label,
-                egui::FontId::proportional(14.0),
-                egui::Color32::WHITE,
-            );
-
-            // Jika diklik (bukan drag), buka keyboard
-            if response.clicked() {
-                state.selected_node_idx = Some(i);
+            if resp.clicked() {
+                state.selected_agent = Some(i);
                 state.show_kb = true;
             }
         }

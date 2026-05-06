@@ -1,36 +1,52 @@
 use eframe::egui;
 
-pub struct Node {
-    pub label: String,
+pub struct Agent {
+    pub name: String,
     pub pos: egui::Pos2,
+    pub color: egui::Color32,
+}
+
+pub struct Connection {
+    pub from: usize,
+    pub to: usize,
 }
 
 pub struct AppState {
-    pub app_name: String,
-    pub selected_node_idx: Option<usize>,
-    pub nodes: Vec<Node>,
+    pub agents: Vec<Agent>,
+    pub connections: Vec<Connection>,
+    pub selected_agent: Option<usize>,
     pub show_kb: bool,
 }
 
 impl AppState {
     pub fn new() -> Self {
         Self {
-            app_name: "VUZT NATIVE".to_string(),
-            selected_node_idx: None,
-            nodes: Vec::new(),
+            agents: Vec::new(),
+            connections: Vec::new(),
+            selected_agent: None,
             show_kb: false,
         }
     }
 
-    pub fn add_node(&mut self) {
-        let id = self.nodes.len();
-        // Spawn dengan sedikit offset agar tidak menumpuk tepat di satu titik
-        let x = 50.0 + (id as f32 * 20.0 % 200.0);
-        let y = 150.0 + (id as f32 * 30.0 % 300.0);
+    pub fn add_agent(&mut self) {
+        let id = self.agents.len();
+        let colors = [
+            egui::Color32::from_rgb(0, 150, 255), // Biru
+            egui::Color32::from_rgb(0, 255, 150), // Hijau
+            egui::Color32::from_rgb(255, 150, 0), // Oranye
+        ];
         
-        self.nodes.push(Node {
-            label: format!("NODE {}", id),
-            pos: egui::pos2(x, y),
-        });
+        let new_agent = Agent {
+            name: format!("Agent {}", id),
+            pos: egui::pos2(100.0, 200.0 + (id as f32 * 20.0)),
+            color: colors[id % colors.len()],
+        };
+        
+        self.agents.push(new_agent);
+        
+        // Logika Auto-Connect: Sambungkan ke agent sebelumnya jika ada
+        if id > 0 {
+            self.connections.push(Connection { from: id - 1, to: id });
+        }
     }
 }
