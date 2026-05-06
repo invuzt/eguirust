@@ -6,9 +6,10 @@ pub fn render_keyboard(ui: &mut egui::Ui, state: &mut AppState) {
     
     ui.vertical_centered(|ui| {
         ui.add_space(8.0);
-        if let Some(idx) = state.selected_node_idx {
-            if let Some(node) = state.nodes.get_mut(idx) {
-                ui.label(format!("RENAME: {}", node.label));
+        // Sinkronisasi: Menggunakan selected_agent dan agents (bukan node)
+        if let Some(idx) = state.selected_agent {
+            if let Some(agent) = state.agents.get_mut(idx) {
+                ui.label(egui::RichText::new(format!("AGENT NAME: {}", agent.name)).strong());
                 
                 ui.group(|ui| {
                     let rows = [
@@ -22,15 +23,20 @@ pub fn render_keyboard(ui: &mut egui::Ui, state: &mut AppState) {
                         ui.horizontal(|ui| {
                             for key in row {
                                 if ui.add_sized(btn_size, egui::Button::new(key)).clicked() {
-                                    node.label.push_str(key);
+                                    agent.name.push_str(key);
                                 }
                             }
                         });
                     }
 
+                    ui.add_space(10.0);
                     ui.horizontal(|ui| {
-                        if ui.button("DELETE").clicked() { node.label.pop(); }
-                        if ui.button("CLOSE").clicked() { state.show_kb = false; }
+                        if ui.add_sized([100.0, 35.0], egui::Button::new("HAPUS")).clicked() {
+                            agent.name.pop();
+                        }
+                        if ui.add_sized([100.0, 35.0], egui::Button::new("CLOSE")).clicked() {
+                            state.show_kb = false;
+                        }
                     });
                 });
             }
