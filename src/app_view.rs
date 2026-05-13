@@ -93,7 +93,6 @@ pub fn render_ui(ctx: &egui::Context, state: &mut AppState) {
             let offset = state.view_offset;
             let to_screen = |p: egui::Pos2| (p.to_vec2() * zoom).to_pos2() + offset;
 
-            // Draw connections with arrow and flow animation
             for conn in &state.connections {
                 let from_node = state.nodes.iter().find(|n| n.id == conn.from_node);
                 let to_node = state.nodes.iter().find(|n| n.id == conn.to_node);
@@ -101,40 +100,38 @@ pub fn render_ui(ctx: &egui::Context, state: &mut AppState) {
                     let start = to_screen(fn_node.pos + egui::vec2(130.0, 35.0));
                     let end = to_screen(tn_node.pos + egui::vec2(0.0, 35.0));
                     
-                    // Draw bezier curve for nicer cable
-                    let cp1 = start + egui::vec2(50.0, 0.0);
-                    let cp2 = end - egui::vec2(50.0, 0.0);
+                    let cp1 = start + egui::vec2(60.0, 0.0);
+                    let cp2 = end - egui::vec2(60.0, 0.0);
                     
-                    let points = (0..20).map(|i| {
+                    let points: Vec<egui::Pos2> = (0..20).map(|i| {
                         let t = i as f32 / 19.0;
-                        let p = (1.0-t).powi(2) * start + 2.0*(1.0-t)*t * cp1 + t.powi(2) * cp2;
-                        p
-                    }).collect::<Vec<_>>();
+                        let x = (1.0-t).powi(2) * start.x + 2.0*(1.0-t)*t * cp1.x + t.powi(2) * cp2.x;
+                        let y = (1.0-t).powi(2) * start.y + 2.0*(1.0-t)*t * cp1.y + t.powi(2) * cp2.y;
+                        egui::pos2(x, y)
+                    }).collect();
                     
                     for i in 0..points.len()-1 {
                         painter.line_segment([points[i], points[i+1]], egui::Stroke::new(3.0, egui::Color32::from_rgb(80, 150, 255)));
                     }
                     
-                    // Draw arrow head
-                    let last = points[points.len()-1];
-                    let prev = points[points.len()-2];
-                    let dir = (last - prev).normalized();
-                    let perp = egui::vec2(-dir.y, dir.x);
-                    let arrow_size = 12.0;
-                    painter.line_segment([last, last - dir * arrow_size + perp * 5.0], egui::Stroke::new(2.0, egui::Color32::from_rgb(80, 150, 255)));
-                    painter.line_segment([last, last - dir * arrow_size - perp * 5.0], egui::Stroke::new(2.0, egui::Color32::from_rgb(80, 150, 255)));
+                    if let (Some(last), Some(prev)) = (points.last(), points.get(points.len()-2)) {
+                        let dir = (*last - *prev).normalized();
+                        let arrow_size = 12.0;
+                        painter.line_segment([*last, *last - dir * arrow_size + egui::vec2(-dir.y, dir.x) * 5.0], egui::Stroke::new(2.0, egui::Color32::from_rgb(80, 150, 255)));
+                        painter.line_segment([*last, *last - dir * arrow_size - egui::vec2(-dir.y, dir.x) * 5.0], egui::Stroke::new(2.0, egui::Color32::from_rgb(80, 150, 255)));
+                    }
                     
-                    // Animated data flow
                     if state.is_running {
                         let t = (ctx.input(|i| i.time) * 1.5).fract() as f32;
-                        let flow_point = (1.0-t).powi(2) * start + 2.0*(1.0-t)*t * cp1 + t.powi(2) * cp2;
+                        let flow_x = (1.0-t).powi(2) * start.x + 2.0*(1.0-t)*t * cp1.x + t.powi(2) * cp2.x;
+                        let flow_y = (1.0-t).powi(2) * start.y + 2.0*(1.0-t)*t * cp1.y + t.powi(2) * cp2.y;
+                        let flow_point = egui::pos2(flow_x, flow_y);
                         painter.circle_filled(flow_point, 6.0, egui::Color32::from_rgb(255, 200, 0));
                         ctx.request_repaint();
                     }
                 }
             }
 
-            // Draw nodes
             for i in 0..state.nodes.len() {
                 let id = egui::Id::new("node").with(i);
                 let screen_pos = to_screen(state.nodes[i].pos);
@@ -145,22 +142,21 @@ pub fn render_ui(ctx: &egui::Context, state: &mut AppState) {
                 if resp.dragged() { state.nodes[i].pos += resp.drag_delta() / zoom; }
                 if resp.clicked() { state.selected_node = Some(i); state.show_kb = true; }
                 
-                // Shadow effect
                 let shadow_rect = rect.translate(egui::vec2(4.0, 4.0));
                 painter.rect_filled(shadow_rect, 16.0 * zoom, egui::Color32::from_rgba_premultiplied(0,0,0,80));
-                
-                // Main node card
                 painter.rect_filled(rect, 16.0 * zoom, state.nodes[i].color);
                 
-                // Node type indicator
                 let small_circle = egui::Rect::from_min_size(rect.min + egui::vec2(8.0, 8.0), egui::vec2(12.0, 12.0) * zoom);
                 painter.circle_filled(small_circle.center(), 6.0 * zoom, egui::Color32::WHITE);
                 
-                // Node name
-                painter.text(rect.center(), egui::Align2::CENTER_CENTER, 
-                    egui::RichText::new(&state.nodes[i].name).size(15.0 * zoom).color(egui::Color32::WHITE).strong());
+                painter.text(
+                    rect.center(), 
+                    egui::Align2::CENTER_CENTER, 
+                    &state.nodes[i].name,
+                    egui::FontId::proportional(15.0 * zoom),
+                    egui::Color32::WHITE
+                );
                 
-                // Input/output ports
                 let left_port = egui::Rect::from_min_size(rect.min + egui::vec2(-6.0, 30.0) * zoom, egui::vec2(12.0, 12.0) * zoom);
                 let right_port = egui::Rect::from_min_size(rect.max - egui::vec2(6.0, 30.0) * zoom, egui::vec2(12.0, 12.0) * zoom);
                 

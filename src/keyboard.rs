@@ -9,7 +9,8 @@ pub fn render_keyboard(ui: &mut egui::Ui, state: &mut AppState) {
     ui.vertical_centered(|ui| {
         if let Some(idx) = state.selected_node {
             if let Some(node) = state.nodes.get_mut(idx) {
-                ui.frame().fill(egui::Color32::from_rgba_premultiplied(25,25,35,250))
+                egui::Frame::none()
+                    .fill(egui::Color32::from_rgba_premultiplied(25,25,35,250))
                     .rounding(egui::Rounding::same(20.0))
                     .show(ui, |ui| {
                         ui.add_space(16.0);
