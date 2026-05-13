@@ -107,11 +107,11 @@ pub struct AppState {
     pub nodes: Vec<Node>,
     pub connections: Vec<Connection>,
     pub selected_node: Option<usize>,
-    pub show_kb: bool,
     pub is_running: bool,
     pub execution_log: Vec<String>,
     pub view_offset: egui::Vec2,
     pub zoom_factor: f32,
+    pub temp_connection: Option<(String, String, egui::Pos2)>,
     next_id: usize,
 }
 
@@ -121,11 +121,11 @@ impl AppState {
             nodes: Vec::new(),
             connections: Vec::new(),
             selected_node: None,
-            show_kb: false,
             is_running: false,
             execution_log: Vec::new(),
             view_offset: egui::vec2(0.0, 0.0),
             zoom_factor: 1.0,
+            temp_connection: None,
             next_id: 0,
         }
     }
@@ -139,9 +139,9 @@ impl AppState {
     pub fn add_node(&mut self, node_type: NodeType, pos: egui::Pos2) {
         let id = self.gen_id();
         let name = match node_type {
-            NodeType::Input => format!("INPUT_{}", self.nodes.len()),
-            NodeType::Process => format!("PROCESS_{}", self.nodes.len()),
-            NodeType::Output => format!("OUTPUT_{}", self.nodes.len()),
+            NodeType::Input => format!("IN_{}", self.nodes.len()),
+            NodeType::Process => format!("PRO_{}", self.nodes.len()),
+            NodeType::Output => format!("OUT_{}", self.nodes.len()),
             NodeType::Function => format!("FN_{}", self.nodes.len()),
         };
         let name_clone = name.clone();
@@ -156,6 +156,13 @@ impl AppState {
             self.connections.retain(|c| c.from_node != node_id && c.to_node != node_id);
             self.selected_node = None;
             self.execution_log.push("Node deleted".to_string());
+        }
+    }
+
+    pub fn add_connection(&mut self, from_node: String, from_port: String, to_node: String, to_port: String) {
+        if from_node != to_node {
+            self.connections.push(Connection { from_node, from_port, to_node, to_port });
+            self.execution_log.push("Connection created".to_string());
         }
     }
 

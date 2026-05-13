@@ -93,11 +93,12 @@ pub fn render_ui(ctx: &egui::Context, state: &mut AppState) {
             let offset = state.view_offset;
             let to_screen = |p: egui::Pos2| (p.to_vec2() * zoom).to_pos2() + offset;
 
+            // Draw existing connections
             for conn in &state.connections {
                 let from_node = state.nodes.iter().find(|n| n.id == conn.from_node);
                 let to_node = state.nodes.iter().find(|n| n.id == conn.to_node);
                 if let (Some(fn_node), Some(tn_node)) = (from_node, to_node) {
-                    let start = to_screen(fn_node.pos + egui::vec2(130.0, 35.0));
+                    let start = to_screen(fn_node.pos + egui::vec2(140.0, 35.0));
                     let end = to_screen(tn_node.pos + egui::vec2(0.0, 35.0));
                     
                     let cp1 = start + egui::vec2(60.0, 0.0);
@@ -126,12 +127,22 @@ pub fn render_ui(ctx: &egui::Context, state: &mut AppState) {
                         let flow_x = (1.0-t).powi(2) * start.x + 2.0*(1.0-t)*t * cp1.x + t.powi(2) * cp2.x;
                         let flow_y = (1.0-t).powi(2) * start.y + 2.0*(1.0-t)*t * cp1.y + t.powi(2) * cp2.y;
                         let flow_point = egui::pos2(flow_x, flow_y);
-                        painter.circle_filled(flow_point, 6.0, egui::Color32::from_rgb(255, 200, 0));
+                        painter.circle_filled(flow_point, 8.0, egui::Color32::from_rgb(255, 200, 0));
                         ctx.request_repaint();
                     }
                 }
             }
+            
+            // Draw temp connection while dragging
+            if let Some((from_node_id, _, current_pos)) = &state.temp_connection {
+                if let Some(from_node) = state.nodes.iter().find(|n| n.id == *from_node_id) {
+                    let start = to_screen(from_node.pos + egui::vec2(140.0, 35.0));
+                    let end = *current_pos;
+                    painter.line_segment([start, end], egui::Stroke::new(3.0, egui::Color32::from_rgb(150, 150, 200)));
+                }
+            }
 
+            // Draw nodes
             for i in 0..state.nodes.len() {
                 let id = egui::Id::new("node").with(i);
                 let screen_pos = to_screen(state.nodes[i].pos);
@@ -139,15 +150,16 @@ pub fn render_ui(ctx: &egui::Context, state: &mut AppState) {
                 let rect = egui::Rect::from_min_size(screen_pos, size);
                 let resp = ui.interact(rect, id, egui::Sense::click_and_drag());
                 
-                if resp.dragged() { state.nodes[i].pos += resp.drag_delta() / zoom; }
-                if resp.clicked() { state.selected_node = Some(i); state.show_kb = true; }
+                if resp.dragged() { 
+                    state.nodes[i].pos += resp.drag_delta() / zoom; 
+                }
+                if resp.clicked() { 
+                    state.selected_node = Some(i); 
+                }
                 
                 let shadow_rect = rect.translate(egui::vec2(4.0, 4.0));
                 painter.rect_filled(shadow_rect, 16.0 * zoom, egui::Color32::from_rgba_premultiplied(0,0,0,80));
                 painter.rect_filled(rect, 16.0 * zoom, state.nodes[i].color);
-                
-                let small_circle = egui::Rect::from_min_size(rect.min + egui::vec2(8.0, 8.0), egui::vec2(12.0, 12.0) * zoom);
-                painter.circle_filled(small_circle.center(), 6.0 * zoom, egui::Color32::WHITE);
                 
                 painter.text(
                     rect.center(), 
@@ -157,11 +169,32 @@ pub fn render_ui(ctx: &egui::Context, state: &mut AppState) {
                     egui::Color32::WHITE
                 );
                 
-                let left_port = egui::Rect::from_min_size(rect.min + egui::vec2(-6.0, 30.0) * zoom, egui::vec2(12.0, 12.0) * zoom);
-                let right_port = egui::Rect::from_min_size(rect.max - egui::vec2(6.0, 30.0) * zoom, egui::vec2(12.0, 12.0) * zoom);
+                // Right port (output) - click to start connection
+                let right_port = egui::Rect::from_min_size(rect.max - egui::vec2(6.0, 35.0) * zoom, egui::vec2(16.0, 16.0) * zoom);
+                let port_resp = ui.interact(right_port, id.with("port"), egui::Sense::click());
                 
-                painter.circle_filled(left_port.center(), 6.0 * zoom, egui::Color32::from_rgb(100, 200, 100));
-                painter.circle_filled(right_port.center(), 6.0 * zoom, egui::Color32::from_rgb(200, 100, 100));
+                painter.circle_filled(right_port.center(), 8.0 * zoom, egui::Color32::from_rgb(255, 100, 100));
+                
+                if port_resp.clicked() {
+                    state.temp_connection = Some((state.nodes[i].id.clone(), "output".to_string(), port_resp.interact_pointer_pos().unwrap_or(rect.max)));
+                }
+                
+                // Left port (input) - release connection here
+                let left_port = egui::Rect::from_min_size(rect.min + egui::vec2(-10.0, 35.0) * zoom, egui::vec2(16.0, 16.0) * zoom);
+                let left_resp = ui.interact(left_port, id.with("inport"), egui::Sense::click());
+                
+                painter.circle_filled(left_port.center(), 8.0 * zoom, egui::Color32::from_rgb(100, 255, 100));
+                
+                if left_resp.clicked() && state.temp_connection.is_some() {
+                    if let Some((from_id, from_port, _)) = state.temp_connection.take() {
+                        state.add_connection(from_id, from_port, state.nodes[i].id.clone(), "input".to_string());
+                    }
+                }
+            }
+            
+            // Cancel connection on background click
+            if resp.clicked() && state.temp_connection.is_some() {
+                state.temp_connection = None;
             }
         });
 }
