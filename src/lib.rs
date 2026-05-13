@@ -1,14 +1,8 @@
 #![cfg(target_os = "android")]
-mod app_logic;
-mod app_view;
+mod app;
 
 use eframe::egui;
-use std::sync::{Arc, Mutex};
 use android_activity::AndroidApp;
-
-struct VuztApp {
-    state: Arc<Mutex<app_logic::AppState>>,
-}
 
 #[no_mangle]
 fn android_main(app: AndroidApp) {
@@ -23,31 +17,9 @@ fn android_main(app: AndroidApp) {
         builder.with_android_app(app_clone);
     }));
 
-    let state = Arc::new(Mutex::new(app_logic::AppState::new()));
-    let state_inner = state.clone();
-
     let _ = eframe::run_native(
         "Vuzt",
         options,
-        Box::new(move |cc| {
-            let mut fonts = egui::FontDefinitions::default();
-            fonts.font_data.insert(
-                "custom_font".to_owned(),
-                egui::FontData::from_static(include_bytes!("../assets/font.ttf")),
-            );
-            fonts.families.get_mut(&egui::FontFamily::Proportional)
-                .unwrap()
-                .insert(0, "custom_font".to_owned());
-            cc.egui_ctx.set_fonts(fonts);
-            
-            Box::new(VuztApp { state: state_inner }) as Box<dyn eframe::App>
-        }),
+        Box::new(|_cc| Box::new(app::MyApp::default())),
     );
-}
-
-impl eframe::App for VuztApp {
-    fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
-        let mut state = self.state.lock().unwrap();
-        crate::app_view::render_ui(ctx, &mut state);
-    }
 }
