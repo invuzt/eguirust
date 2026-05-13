@@ -1,8 +1,7 @@
 use eframe::egui;
 use std::collections::HashMap;
-use serde::{Serialize, Deserialize};
 
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug)]
 pub enum DataType {
     Number(f64),
     Text(String),
@@ -14,7 +13,7 @@ impl Default for DataType {
     fn default() -> Self { DataType::Null }
 }
 
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug)]
 pub enum NodeType {
     Input,
     Process,
@@ -22,7 +21,7 @@ pub enum NodeType {
     Function,
 }
 
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug)]
 pub struct Node {
     pub id: String,
     pub name: String,
@@ -96,7 +95,7 @@ impl Node {
     }
 }
 
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug)]
 pub struct Connection {
     pub from_node: String,
     pub from_port: String,
@@ -145,8 +144,9 @@ impl AppState {
             NodeType::Output => format!("OUTPUT_{}", self.nodes.len()),
             NodeType::Function => format!("FN_{}", self.nodes.len()),
         };
+        let name_clone = name.clone();
         self.nodes.push(Node::new(id, name, pos, node_type));
-        self.execution_log.push(format!("Added: {}", name));
+        self.execution_log.push(format!("Added: {}", name_clone));
     }
 
     pub fn delete_selected(&mut self) {
@@ -179,7 +179,13 @@ impl AppState {
             
             let outputs = self.nodes[i].execute(input_data);
             for (port, value) in &outputs {
-                self.execution_log.push(format!("{} . {} = {:?}", self.nodes[i].name, port, value));
+                let value_str = match value {
+                    DataType::Number(n) => format!("{}", n),
+                    DataType::Text(s) => format!("\"{}\"", s),
+                    DataType::Boolean(b) => format!("{}", b),
+                    DataType::Null => "null".to_string(),
+                };
+                self.execution_log.push(format!("{} . {} = {}", self.nodes[i].name, port, value_str));
             }
             node_outputs.insert(node_id, outputs);
         }

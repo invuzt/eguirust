@@ -59,8 +59,8 @@ pub fn render_ui(ctx: &egui::Context, state: &mut AppState) {
             let from_node = state.nodes.iter().find(|n| n.id == conn.from_node);
             let to_node = state.nodes.iter().find(|n| n.id == conn.to_node);
             if let (Some(fn_node), Some(tn_node)) = (from_node, to_node) {
-                let start = to_screen(fn_node.pos + egui::vec2(100.0, 20.0));
-                let end = to_screen(tn_node.pos + egui::vec2(0.0, 20.0));
+                let start = to_screen(fn_node.pos + egui::vec2(120.0, 30.0));
+                let end = to_screen(tn_node.pos + egui::vec2(0.0, 30.0));
                 painter.line_segment([start, end], egui::Stroke::new(2.0, egui::Color32::from_rgb(100, 100, 255)));
             }
         }
