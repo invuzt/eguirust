@@ -1,76 +1,187 @@
 use eframe::egui;
+use std::collections::HashMap;
+use serde::{Serialize, Deserialize};
 
-pub struct Agent {
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub enum DataType {
+    Number(f64),
+    Text(String),
+    Boolean(bool),
+    Null,
+}
+
+impl Default for DataType {
+    fn default() -> Self { DataType::Null }
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub enum NodeType {
+    Input,
+    Process,
+    Output,
+    Function,
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct Node {
+    pub id: String,
     pub name: String,
     pub pos: egui::Pos2,
     pub color: egui::Color32,
+    pub node_type: NodeType,
+    pub inputs: HashMap<String, DataType>,
+    pub outputs: HashMap<String, DataType>,
+    pub config: HashMap<String, String>,
 }
 
+impl Node {
+    pub fn new(id: String, name: String, pos: egui::Pos2, node_type: NodeType) -> Self {
+        let (color, inputs, outputs) = match node_type {
+            NodeType::Input => (
+                egui::Color32::from_rgb(34, 197, 94),
+                HashMap::new(),
+                HashMap::from([("value".to_string(), DataType::Number(0.0))]),
+            ),
+            NodeType::Process => (
+                egui::Color32::from_rgb(59, 130, 246),
+                HashMap::from([("input".to_string(), DataType::Number(0.0))]),
+                HashMap::from([("output".to_string(), DataType::Number(0.0))]),
+            ),
+            NodeType::Output => (
+                egui::Color32::from_rgb(239, 68, 68),
+                HashMap::from([("input".to_string(), DataType::Number(0.0))]),
+                HashMap::new(),
+            ),
+            NodeType::Function => (
+                egui::Color32::from_rgb(168, 85, 247),
+                HashMap::new(),
+                HashMap::from([("result".to_string(), DataType::Null)]),
+            ),
+        };
+        Self { id, name, pos, color, node_type, inputs, outputs, config: HashMap::new() }
+    }
+
+    pub fn execute(&mut self, inputs: HashMap<String, DataType>) -> HashMap<String, DataType> {
+        for (k, v) in inputs { self.inputs.insert(k, v); }
+        match self.node_type {
+            NodeType::Process => self.execute_process(),
+            NodeType::Function => self.execute_function(),
+            _ => self.outputs.clone(),
+        }
+    }
+
+    fn execute_process(&mut self) -> HashMap<String, DataType> {
+        let input = self.inputs.get("input").unwrap_or(&DataType::Number(0.0));
+        let op = self.config.get("op").map(|s| s.as_str()).unwrap_or("add");
+        let result = match (input, op) {
+            (DataType::Number(a), "add") => DataType::Number(a + 1.0),
+            (DataType::Number(a), "mul") => DataType::Number(a * 2.0),
+            (DataType::Number(a), "div") => DataType::Number(a / 2.0),
+            (DataType::Text(s), "upper") => DataType::Text(s.to_uppercase()),
+            (DataType::Text(s), "lower") => DataType::Text(s.to_lowercase()),
+            _ => DataType::Number(0.0),
+        };
+        self.outputs.insert("output".to_string(), result);
+        self.outputs.clone()
+    }
+
+    fn execute_function(&mut self) -> HashMap<String, DataType> {
+        let result = match self.config.get("func").map(|s| s.as_str()) {
+            Some("random") => DataType::Number(rand::random::<f64>() * 100.0),
+            Some("timestamp") => DataType::Number(std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_secs() as f64),
+            _ => DataType::Null,
+        };
+        self.outputs.insert("result".to_string(), result);
+        self.outputs.clone()
+    }
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Connection {
-    pub from: usize,
-    pub to: usize,
-    pub message: String,
+    pub from_node: String,
+    pub from_port: String,
+    pub to_node: String,
+    pub to_port: String,
 }
 
 pub struct AppState {
-    pub agents: Vec<Agent>,
+    pub nodes: Vec<Node>,
     pub connections: Vec<Connection>,
-    pub selected_agent: Option<usize>,
-    pub link_source: Option<usize>,
+    pub selected_node: Option<usize>,
     pub show_kb: bool,
     pub is_running: bool,
-    // Navigasi Canvas
+    pub execution_log: Vec<String>,
     pub view_offset: egui::Vec2,
     pub zoom_factor: f32,
+    next_id: usize,
 }
 
 impl AppState {
     pub fn new() -> Self {
         Self {
-            agents: Vec::new(),
+            nodes: Vec::new(),
             connections: Vec::new(),
-            selected_agent: None,
-            link_source: None,
+            selected_node: None,
             show_kb: false,
             is_running: false,
+            execution_log: Vec::new(),
             view_offset: egui::vec2(0.0, 0.0),
             zoom_factor: 1.0,
+            next_id: 0,
         }
     }
 
-    pub fn add_agent(&mut self) {
-        let id = self.agents.len();
-        // Spawn relatif terhadap view agar muncul di tengah layar yang terlihat
-        let spawn_pos = egui::pos2(150.0, 300.0);
-        self.agents.push(Agent {
-            name: format!("AGENT_{}", id),
-            pos: spawn_pos,
-            color: egui::Color32::from_rgb(0, 120, 255),
-        });
+    fn gen_id(&mut self) -> String {
+        let id = format!("node_{}", self.next_id);
+        self.next_id += 1;
+        id
     }
 
-    pub fn spawn_child(&mut self, parent_idx: usize) {
-        let parent_pos = self.agents[parent_idx].pos;
-        let id = self.agents.len();
-        let new_pos = parent_pos + egui::vec2(150.0, 0.0);
-        self.agents.push(Agent {
-            name: format!("AGENT_{}", id),
-            pos: new_pos,
-            color: egui::Color32::from_rgb(0, 200, 150),
-        });
-        self.connections.push(Connection { from: parent_idx, to: id, message: "Sync".to_string() });
+    pub fn add_node(&mut self, node_type: NodeType, pos: egui::Pos2) {
+        let id = self.gen_id();
+        let name = match node_type {
+            NodeType::Input => format!("INPUT_{}", self.nodes.len()),
+            NodeType::Process => format!("PROCESS_{}", self.nodes.len()),
+            NodeType::Output => format!("OUTPUT_{}", self.nodes.len()),
+            NodeType::Function => format!("FN_{}", self.nodes.len()),
+        };
+        self.nodes.push(Node::new(id, name, pos, node_type));
+        self.execution_log.push(format!("Added: {}", name));
     }
 
     pub fn delete_selected(&mut self) {
-        if let Some(idx) = self.selected_agent {
-            self.agents.remove(idx);
-            self.connections.retain(|c| c.from != idx && c.to != idx);
-            for c in &mut self.connections {
-                if c.from > idx { c.from -= 1; }
-                if c.to > idx { c.to -= 1; }
+        if let Some(idx) = self.selected_node {
+            let node_id = self.nodes[idx].id.clone();
+            self.nodes.remove(idx);
+            self.connections.retain(|c| c.from_node != node_id && c.to_node != node_id);
+            self.selected_node = None;
+            self.execution_log.push("Node deleted".to_string());
+        }
+    }
+
+    pub fn run_execution(&mut self) {
+        self.execution_log.clear();
+        let mut node_outputs: HashMap<String, HashMap<String, DataType>> = HashMap::new();
+        
+        for i in 0..self.nodes.len() {
+            let node_id = self.nodes[i].id.clone();
+            let mut input_data = HashMap::new();
+            
+            for conn in &self.connections {
+                if conn.to_node == node_id {
+                    if let Some(output_data) = node_outputs.get(&conn.from_node) {
+                        if let Some(value) = output_data.get(&conn.from_port) {
+                            input_data.insert(conn.to_port.clone(), value.clone());
+                        }
+                    }
+                }
             }
-            self.selected_agent = None;
-            self.show_kb = false;
+            
+            let outputs = self.nodes[i].execute(input_data);
+            for (port, value) in &outputs {
+                self.execution_log.push(format!("{} . {} = {:?}", self.nodes[i].name, port, value));
+            }
+            node_outputs.insert(node_id, outputs);
         }
     }
 }

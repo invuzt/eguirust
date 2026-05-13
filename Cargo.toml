@@ -36,3 +36,5 @@ lto = true           # Link Time Optimization (Krusial!)
 codegen-units = 1    # Satu unit untuk kompresi maksimal
 panic = "abort"      # Buang stack unwinding
 strip = true         # Hapus simbol debug
+serde = { version = "1.0", features = ["derive"] }
+rand = "0.8"
