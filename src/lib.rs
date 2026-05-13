@@ -19,6 +19,18 @@ fn android_main(app: AndroidApp) {
     let _ = eframe::run_native(
         "Vuzt",
         options,
-        Box::new(|_cc| Box::new(app::MyApp::new())),
+        Box::new(|cc| {
+            let mut fonts = egui::FontDefinitions::default();
+            fonts.font_data.insert(
+                "custom_font".to_owned(),
+                egui::FontData::from_static(include_bytes!("../assets/font.ttf")),
+            );
+            fonts.families.get_mut(&egui::FontFamily::Proportional)
+                .unwrap()
+                .insert(0, "custom_font".to_owned());
+            cc.egui_ctx.set_fonts(fonts);
+            
+            Box::new(app::MyApp::default())
+        }),
     );
 }
