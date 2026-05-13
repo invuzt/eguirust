@@ -10,7 +10,11 @@ fn android_main(app: AndroidApp) {
         android_logger::Config::default().with_max_level(log::LevelFilter::Info)
     );
 
-    let mut options = eframe::NativeOptions::default();
+    let mut options = eframe::NativeOptions {
+        vsync: true, // Aktifkan VSync untuk menghemat baterai
+        ..Default::default()
+    };
+    
     let app_clone = app.clone();
     options.event_loop_builder = Some(Box::new(move |builder| {
         use winit::platform::android::EventLoopBuilderExtAndroid;
@@ -30,6 +34,9 @@ fn android_main(app: AndroidApp) {
                 .unwrap()
                 .insert(0, "custom_font".to_owned());
             cc.egui_ctx.set_fonts(fonts);
+            
+            // Set repaint interval untuk idle (render 2x per detik)
+            cc.egui_ctx.request_repaint_after(std::time::Duration::from_millis(500));
             
             Box::new(app::MyApp::default())
         }),
