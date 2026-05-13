@@ -1,7 +1,6 @@
 #![cfg(target_os = "android")]
 mod app;
 
-use eframe::egui;
 use android_activity::AndroidApp;
 
 #[no_mangle]
@@ -20,6 +19,6 @@ fn android_main(app: AndroidApp) {
     let _ = eframe::run_native(
         "Vuzt",
         options,
-        Box::new(|_cc| Box::new(app::MyApp::default())),
+        Box::new(|_cc| Box::new(app::MyApp::new())),
     );
 }

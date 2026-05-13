@@ -68,7 +68,6 @@ impl MyApp {
     fn process_action(&mut self, action: &ButtonAction) {
         match action {
             ButtonAction::ProcessText(cmd) => {
-                // Simulasi proses dari external command
                 self.output_text = format!("Processing: {} -> {}", cmd, self.input_text);
             }
             ButtonAction::Clear => {
@@ -126,7 +125,9 @@ impl eframe::App for MyApp {
                     
                     ui.add_space(10.0);
                     
-                    if ui.button(egui::RichText::new("⌨️").size(24.0)).clicked() {
+                    let kb_btn = egui::Button::new(egui::RichText::new("⌨️").size(24.0))
+                        .rounding(egui::Rounding::same(30.0));
+                    if ui.add_sized(egui::vec2(55.0, 45.0), kb_btn).clicked() {
                         self.show_keyboard = !self.show_keyboard;
                     }
                     ui.add_space(side_margin);
@@ -135,13 +136,16 @@ impl eframe::App for MyApp {
                 ui.add_space(20.0);
                 
                 // Output display
-                ui.group(|ui| {
-                    ui.add_space(10.0);
-                    ui.label(egui::RichText::new("📤 OUTPUT:").strong().size(16.0));
-                    ui.add_space(5.0);
-                    ui.label(egui::RichText::new(&self.output_text).size(18.0).color(egui::Color32::from_rgb(200, 220, 255)));
-                    ui.add_space(10.0);
-                });
+                egui::Frame::none()
+                    .fill(egui::Color32::from_rgb(30, 30, 35))
+                    .rounding(egui::Rounding::same(12.0))
+                    .show(ui, |ui| {
+                        ui.add_space(10.0);
+                        ui.label(egui::RichText::new("📤 OUTPUT:").strong().size(16.0));
+                        ui.add_space(5.0);
+                        ui.label(egui::RichText::new(&self.output_text).size(18.0).color(egui::Color32::from_rgb(200, 220, 255)));
+                        ui.add_space(10.0);
+                    });
                 
                 ui.add_space(30.0);
                 
@@ -185,14 +189,14 @@ impl eframe::App for MyApp {
                         for row in rows {
                             ui.horizontal(|ui| {
                                 for key in row {
-                                    let btn = egui::Button::new(egui::RichText::new(key).size(24.0))
+                                    let btn = egui::Button::new(egui::RichText::new(*key).size(24.0))
                                         .fill(egui::Color32::from_rgb(60, 60, 70))
                                         .rounding(egui::Rounding::same(30.0));
                                     
                                     if ui.add_sized(egui::vec2(55.0, 55.0), btn).clicked() {
-                                        if key == &" " {
+                                        if *key == " " {
                                             self.input_text.push(' ');
-                                        } else if key == &"@" {
+                                        } else if *key == "@" {
                                             self.input_text.push('@');
                                         } else {
                                             self.input_text.push_str(key);
@@ -205,21 +209,19 @@ impl eframe::App for MyApp {
                         
                         ui.add_space(12.0);
                         ui.horizontal(|ui| {
-                            if ui.button(egui::RichText::new("⌫ HAPUS").size(16.0))
+                            let del_btn = egui::Button::new(egui::RichText::new("⌫ HAPUS").size(16.0))
                                 .fill(egui::Color32::from_rgb(220, 38, 38))
-                                .rounding(egui::Rounding::same(25.0))
-                                .clicked() 
-                            {
+                                .rounding(egui::Rounding::same(25.0));
+                            if ui.add_sized(egui::vec2(130.0, 50.0), del_btn).clicked() {
                                 self.input_text.pop();
                             }
                             
                             ui.add_space(20.0);
                             
-                            if ui.button(egui::RichText::new("✓ TUTUP").size(16.0))
+                            let close_btn = egui::Button::new(egui::RichText::new("✓ TUTUP").size(16.0))
                                 .fill(egui::Color32::from_rgb(34, 197, 94))
-                                .rounding(egui::Rounding::same(25.0))
-                                .clicked() 
-                            {
+                                .rounding(egui::Rounding::same(25.0));
+                            if ui.add_sized(egui::vec2(130.0, 50.0), close_btn).clicked() {
                                 self.show_keyboard = false;
                             }
                         });
