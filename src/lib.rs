@@ -1,6 +1,7 @@
 #![cfg(target_os = "android")]
 mod app;
 
+use eframe::egui;
 use android_activity::AndroidApp;
 
 #[no_mangle]
