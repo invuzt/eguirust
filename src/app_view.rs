@@ -2,46 +2,49 @@ use eframe::egui;
 use crate::app_logic::{AppState, NodeType};
 
 pub fn render_ui(ctx: &egui::Context, state: &mut AppState) {
+    let screen_rect = ctx.input(|i| i.screen_rect());
+    let top_margin = screen_rect.height() * 0.08;
+    
     egui::TopBottomPanel::top("toolbar")
-        .frame(egui::Frame::none().fill(egui::Color32::from_rgba_premultiplied(0,0,0,230)))
+        .frame(egui::Frame::none().fill(egui::Color32::from_rgba_premultiplied(0,0,0,220)))
         .resizable(false)
         .show(ctx, |ui| {
-            ui.add_space(45.0);
+            ui.add_space(top_margin);
             ui.horizontal(|ui| {
                 ui.add_space(12.0);
                 
                 let btn_style = |ui: &mut egui::Ui, text: &str, color: egui::Color32| {
-                    let btn = egui::Button::new(egui::RichText::new(text).color(egui::Color32::WHITE))
+                    let btn = egui::Button::new(egui::RichText::new(text).color(egui::Color32::WHITE).size(14.0))
                         .fill(color)
-                        .rounding(egui::Rounding::same(20.0));
-                    ui.add_sized(egui::vec2(70.0, 40.0), btn).clicked()
+                        .rounding(egui::Rounding::same(30.0));
+                    ui.add_sized(egui::vec2(65.0, 44.0), btn).clicked()
                 };
                 
-                if btn_style(ui, "➕ IN", egui::Color32::from_rgb(34, 197, 94)) {
+                if btn_style(ui, "IN", egui::Color32::from_rgb(34, 197, 94)) {
                     state.add_node(NodeType::Input, egui::pos2(100.0, 250.0));
                 }
-                if btn_style(ui, "⚙ PRO", egui::Color32::from_rgb(59, 130, 246)) {
+                if btn_style(ui, "PRO", egui::Color32::from_rgb(59, 130, 246)) {
                     state.add_node(NodeType::Process, egui::pos2(300.0, 250.0));
                 }
-                if btn_style(ui, "📤 OUT", egui::Color32::from_rgb(239, 68, 68)) {
+                if btn_style(ui, "OUT", egui::Color32::from_rgb(239, 68, 68)) {
                     state.add_node(NodeType::Output, egui::pos2(500.0, 250.0));
                 }
-                if btn_style(ui, "🔧 FN", egui::Color32::from_rgb(168, 85, 247)) {
+                if btn_style(ui, "FN", egui::Color32::from_rgb(168, 85, 247)) {
                     state.add_node(NodeType::Function, egui::pos2(700.0, 250.0));
                 }
                 
-                ui.add_space(20.0);
+                ui.add_space(12.0);
                 
                 let run_color = if state.is_running { egui::Color32::from_rgb(220, 38, 38) } else { egui::Color32::from_rgb(34, 197, 94) };
-                if btn_style(ui, if state.is_running { "⏹ STOP" } else { "▶ RUN" }, run_color) {
+                if btn_style(ui, if state.is_running { "STOP" } else { "RUN" }, run_color) {
                     state.is_running = !state.is_running;
                     if state.is_running { state.run_execution(); }
                 }
                 
-                if btn_style(ui, "🗑 DEL", egui::Color32::from_rgb(124, 58, 237)) {
+                if btn_style(ui, "DEL", egui::Color32::from_rgb(124, 58, 237)) {
                     state.delete_selected();
                 }
-                if btn_style(ui, "🔄 RESET", egui::Color32::from_rgb(107, 114, 128)) {
+                if btn_style(ui, "RESET", egui::Color32::from_rgb(107, 114, 128)) {
                     state.view_offset = egui::vec2(0.0, 0.0);
                     state.zoom_factor = 1.0;
                 }
@@ -52,16 +55,18 @@ pub fn render_ui(ctx: &egui::Context, state: &mut AppState) {
 
     egui::SidePanel::right("log_panel")
         .resizable(true)
-        .default_width(260.0)
-        .frame(egui::Frame::none().fill(egui::Color32::from_rgba_premultiplied(20,20,25,240)))
+        .default_width(280.0)
+        .frame(egui::Frame::none().fill(egui::Color32::from_rgba_premultiplied(15,15,20,245)))
         .show(ctx, |ui| {
-            ui.add_space(55.0);
-            ui.heading(egui::RichText::new("📋 EVENT LOG").color(egui::Color32::WHITE));
+            ui.add_space(top_margin + 8.0);
+            ui.heading(egui::RichText::new("📋 EVENT LOG").color(egui::Color32::WHITE).size(16.0));
             ui.separator();
             ui.add_space(8.0);
             egui::ScrollArea::vertical().show(ui, |ui| {
-                for log in state.execution_log.iter().rev().take(30) {
-                    ui.label(egui::RichText::new(log).color(egui::Color32::from_rgb(200,200,210)));
+                for log in state.execution_log.iter().rev().take(50) {
+                    let color = if log.contains("= null") { egui::Color32::from_rgb(150,150,150) } 
+                                else { egui::Color32::from_rgb(200,220,255) };
+                    ui.label(egui::RichText::new(log).color(color).size(12.0));
                     ui.add_space(4.0);
                 }
             });
@@ -72,6 +77,7 @@ pub fn render_ui(ctx: &egui::Context, state: &mut AppState) {
         .show(ctx, |ui| {
             let rect = ui.max_rect();
             let resp = ui.interact(rect, ui.id(), egui::Sense::drag());
+            
             if resp.dragged() && !ctx.input(|i| i.pointer.any_down()) {
                 state.view_offset += resp.drag_delta();
             }
@@ -87,28 +93,79 @@ pub fn render_ui(ctx: &egui::Context, state: &mut AppState) {
             let offset = state.view_offset;
             let to_screen = |p: egui::Pos2| (p.to_vec2() * zoom).to_pos2() + offset;
 
+            // Draw connections with arrow and flow animation
             for conn in &state.connections {
                 let from_node = state.nodes.iter().find(|n| n.id == conn.from_node);
                 let to_node = state.nodes.iter().find(|n| n.id == conn.to_node);
                 if let (Some(fn_node), Some(tn_node)) = (from_node, to_node) {
-                    let start = to_screen(fn_node.pos + egui::vec2(120.0, 30.0));
-                    let end = to_screen(tn_node.pos + egui::vec2(0.0, 30.0));
-                    painter.line_segment([start, end], egui::Stroke::new(3.0, egui::Color32::from_rgb(100, 100, 255)));
+                    let start = to_screen(fn_node.pos + egui::vec2(130.0, 35.0));
+                    let end = to_screen(tn_node.pos + egui::vec2(0.0, 35.0));
+                    
+                    // Draw bezier curve for nicer cable
+                    let cp1 = start + egui::vec2(50.0, 0.0);
+                    let cp2 = end - egui::vec2(50.0, 0.0);
+                    
+                    let points = (0..20).map(|i| {
+                        let t = i as f32 / 19.0;
+                        let p = (1.0-t).powi(2) * start + 2.0*(1.0-t)*t * cp1 + t.powi(2) * cp2;
+                        p
+                    }).collect::<Vec<_>>();
+                    
+                    for i in 0..points.len()-1 {
+                        painter.line_segment([points[i], points[i+1]], egui::Stroke::new(3.0, egui::Color32::from_rgb(80, 150, 255)));
+                    }
+                    
+                    // Draw arrow head
+                    let last = points[points.len()-1];
+                    let prev = points[points.len()-2];
+                    let dir = (last - prev).normalized();
+                    let perp = egui::vec2(-dir.y, dir.x);
+                    let arrow_size = 12.0;
+                    painter.line_segment([last, last - dir * arrow_size + perp * 5.0], egui::Stroke::new(2.0, egui::Color32::from_rgb(80, 150, 255)));
+                    painter.line_segment([last, last - dir * arrow_size - perp * 5.0], egui::Stroke::new(2.0, egui::Color32::from_rgb(80, 150, 255)));
+                    
+                    // Animated data flow
+                    if state.is_running {
+                        let t = (ctx.input(|i| i.time) * 1.5).fract() as f32;
+                        let flow_point = (1.0-t).powi(2) * start + 2.0*(1.0-t)*t * cp1 + t.powi(2) * cp2;
+                        painter.circle_filled(flow_point, 6.0, egui::Color32::from_rgb(255, 200, 0));
+                        ctx.request_repaint();
+                    }
                 }
             }
 
+            // Draw nodes
             for i in 0..state.nodes.len() {
                 let id = egui::Id::new("node").with(i);
                 let screen_pos = to_screen(state.nodes[i].pos);
-                let size = egui::vec2(130.0, 70.0) * zoom;
+                let size = egui::vec2(140.0, 70.0) * zoom;
                 let rect = egui::Rect::from_min_size(screen_pos, size);
                 let resp = ui.interact(rect, id, egui::Sense::click_and_drag());
                 
                 if resp.dragged() { state.nodes[i].pos += resp.drag_delta() / zoom; }
                 if resp.clicked() { state.selected_node = Some(i); state.show_kb = true; }
                 
+                // Shadow effect
+                let shadow_rect = rect.translate(egui::vec2(4.0, 4.0));
+                painter.rect_filled(shadow_rect, 16.0 * zoom, egui::Color32::from_rgba_premultiplied(0,0,0,80));
+                
+                // Main node card
                 painter.rect_filled(rect, 16.0 * zoom, state.nodes[i].color);
-                painter.text(rect.center(), egui::Align2::CENTER_CENTER, &state.nodes[i].name, egui::FontId::proportional(16.0 * zoom), egui::Color32::WHITE);
+                
+                // Node type indicator
+                let small_circle = egui::Rect::from_min_size(rect.min + egui::vec2(8.0, 8.0), egui::vec2(12.0, 12.0) * zoom);
+                painter.circle_filled(small_circle.center(), 6.0 * zoom, egui::Color32::WHITE);
+                
+                // Node name
+                painter.text(rect.center(), egui::Align2::CENTER_CENTER, 
+                    egui::RichText::new(&state.nodes[i].name).size(15.0 * zoom).color(egui::Color32::WHITE).strong());
+                
+                // Input/output ports
+                let left_port = egui::Rect::from_min_size(rect.min + egui::vec2(-6.0, 30.0) * zoom, egui::vec2(12.0, 12.0) * zoom);
+                let right_port = egui::Rect::from_min_size(rect.max - egui::vec2(6.0, 30.0) * zoom, egui::vec2(12.0, 12.0) * zoom);
+                
+                painter.circle_filled(left_port.center(), 6.0 * zoom, egui::Color32::from_rgb(100, 200, 100));
+                painter.circle_filled(right_port.center(), 6.0 * zoom, egui::Color32::from_rgb(200, 100, 100));
             }
         });
 }
