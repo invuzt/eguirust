@@ -12,13 +12,12 @@ impl Default for MyApp {
 
 impl eframe::App for MyApp {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
-        // Hanya request repaint jika ada interaksi
+        // Deteksi interaksi sederhana
         let has_interaction = ctx.input(|i| {
-            i.pointer.any_down() ||           // Jari menyentuh
-            i.pointer.any_pressed() ||        // Tekanan baru
-            !i.pointer.button_click(egui::PointerButton::Primary).is_none() ||
-            i.raw_scroll_delta != egui::Vec2::ZERO ||
-            i.zoom_delta() != 1.0
+            i.pointer.any_down() ||           
+            i.pointer.any_pressed() ||
+            i.zoom_delta() != 1.0 ||
+            i.raw_scroll_delta != egui::Vec2::ZERO
         });
         
         if has_interaction {
