@@ -12,18 +12,6 @@ impl Default for MyApp {
 
 impl eframe::App for MyApp {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
-        // Deteksi interaksi sederhana
-        let has_interaction = ctx.input(|i| {
-            i.pointer.any_down() ||           
-            i.pointer.any_pressed() ||
-            i.zoom_delta() != 1.0 ||
-            i.raw_scroll_delta != egui::Vec2::ZERO
-        });
-        
-        if has_interaction {
-            ctx.request_repaint();
-        }
-        
         egui::CentralPanel::default().show(ctx, |ui| {
             ui.vertical_centered(|ui| {
                 ui.add_space(100.0);
@@ -33,11 +21,16 @@ impl eframe::App for MyApp {
                 ui.add_space(30.0);
                 
                 let button = ui.button(egui::RichText::new("Click Me!").size(20.0));
+                
+                // HANYA repaint ketika tombol benar-benar diklik
                 if button.clicked() {
                     self.counter += 1;
                     ctx.request_repaint();
                 }
             });
         });
+        
+        // TIDAK ADA request_repaint() di luar tombol
+        // Jadi UI hanya render ulang saat ada perubahan state (counter bertambah)
     }
 }
