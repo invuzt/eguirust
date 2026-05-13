@@ -33,7 +33,7 @@ fn android_main(app: AndroidApp) {
         options,
         Box::new(move |cc| {
             crate::css::apply_custom_style(&cc.egui_ctx);
-            
+
             let mut fonts = egui::FontDefinitions::default();
             fonts.font_data.insert(
                 "custom_font".to_owned(),
@@ -52,18 +52,13 @@ fn android_main(app: AndroidApp) {
 impl eframe::App for VuztApp {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
         let mut state = self.state.lock().unwrap();
-
-        // Gunakan view eksternal untuk UI utama
         crate::app_view::render_ui(ctx, &mut state);
-
-        // Overlay Keyboard jika aktif
         if state.show_kb {
             egui::TopBottomPanel::bottom("virtual_keyboard")
                 .resizable(false)
+                .frame(egui::Frame::none().fill(egui::Color32::from_rgba_premultiplied(0,0,0,200)))
                 .show(ctx, |ui| {
-                    ui.add_space(10.0);
                     crate::keyboard::render_keyboard(ui, &mut state);
-                    ui.add_space(10.0);
                 });
         }
     }
