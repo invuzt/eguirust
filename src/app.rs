@@ -20,10 +20,12 @@ impl eframe::App for MyApp {
         let screen_width = screen_rect.width();
         let screen_height = screen_rect.height();
         
-        // Responsive sizes
-        let key_width = screen_width / 11.0;
-        let key_height = key_width * 1.2;
-        let space_width = screen_width / 2.5;
+        // Floating keyboard size - lebih kecil dan mengambang
+        let keyboard_width = screen_width * 0.85;
+        let keyboard_height = screen_height * 0.38;
+        let key_width = keyboard_width / 11.0;
+        let key_height = key_width * 1.1;
+        let space_width = keyboard_width * 0.35;
         
         egui::CentralPanel::default().show(ctx, |ui| {
             ui.vertical_centered(|ui| {
@@ -59,87 +61,76 @@ impl eframe::App for MyApp {
             });
         });
         
-        // Responsive Android keyboard
+        // Floating keyboard - mengambang di tengah bawah
         if self.show_keyboard {
-            let keyboard_height = screen_height * 0.42;
-            
-            egui::Window::new("")
+            egui::Window::new("⌨️ Keyboard")
                 .collapsible(false)
                 .resizable(false)
-                .title_bar(false)
-                .frame(egui::Frame::none().fill(egui::Color32::from_rgb(30, 30, 35)))
-                .anchor(egui::Align2::CENTER_BOTTOM, [0.0, 0.0])
-                .fixed_size([screen_width, keyboard_height])
+                .title_bar(true)
+                .title_bar_buttons_style(egui::style::TitleBarButtonsStyle::Close)
+                .frame(egui::Frame::none()
+                    .fill(egui::Color32::from_rgb(35, 35, 40))
+                    .corner_radius(egui::Rounding::same(20.0)))
+                .anchor(egui::Align2::CENTER_BOTTOM, [0.0, -20.0])
+                .fixed_size([keyboard_width, keyboard_height])
                 .show(ctx, |ui| {
                     ui.vertical_centered(|ui| {
-                        ui.add_space(6.0);
-                        
-                        // Handle bar
-                        ui.horizontal(|ui| {
-                            ui.add_space(screen_width * 0.42);
-                            let handle = egui::Button::new("")
-                                .fill(egui::Color32::from_rgb(80, 80, 90))
-                                .rounding(egui::Rounding::same(4.0));
-                            ui.add_sized(egui::vec2(40.0, 4.0), handle);
-                        });
-                        
-                        ui.add_space(10.0);
+                        ui.add_space(8.0);
                         
                         // Row 1
                         ui.horizontal(|ui| {
-                            ui.add_space(screen_width * 0.02);
+                            ui.add_space(4.0);
                             for key in ["Q", "W", "E", "R", "T", "Y", "U", "I", "O", "P"] {
                                 let btn = egui::Button::new(key)
-                                    .fill(egui::Color32::from_rgb(55, 55, 60))
+                                    .fill(egui::Color32::from_rgb(55, 55, 65))
                                     .rounding(egui::Rounding::same(8.0));
                                 if ui.add_sized(egui::vec2(key_width, key_height), btn).clicked() {
                                     self.input_text.push_str(key);
                                 }
                                 ui.add_space(2.0);
                             }
-                            ui.add_space(screen_width * 0.02);
+                            ui.add_space(4.0);
                         });
                         ui.add_space(6.0);
                         
                         // Row 2
                         ui.horizontal(|ui| {
-                            ui.add_space(screen_width * 0.08);
+                            ui.add_space(18.0);
                             for key in ["A", "S", "D", "F", "G", "H", "J", "K", "L"] {
                                 let btn = egui::Button::new(key)
-                                    .fill(egui::Color32::from_rgb(55, 55, 60))
+                                    .fill(egui::Color32::from_rgb(55, 55, 65))
                                     .rounding(egui::Rounding::same(8.0));
                                 if ui.add_sized(egui::vec2(key_width, key_height), btn).clicked() {
                                     self.input_text.push_str(key);
                                 }
                                 ui.add_space(2.0);
                             }
-                            ui.add_space(screen_width * 0.08);
+                            ui.add_space(18.0);
                         });
                         ui.add_space(6.0);
                         
                         // Row 3
                         ui.horizontal(|ui| {
-                            ui.add_space(screen_width * 0.12);
+                            ui.add_space(28.0);
                             for key in ["Z", "X", "C", "V", "B", "N", "M"] {
                                 let btn = egui::Button::new(key)
-                                    .fill(egui::Color32::from_rgb(55, 55, 60))
+                                    .fill(egui::Color32::from_rgb(55, 55, 65))
                                     .rounding(egui::Rounding::same(8.0));
                                 if ui.add_sized(egui::vec2(key_width, key_height), btn).clicked() {
                                     self.input_text.push_str(key);
                                 }
                                 ui.add_space(2.0);
                             }
-                            ui.add_space(screen_width * 0.12);
+                            ui.add_space(28.0);
                         });
                         ui.add_space(8.0);
                         
                         // Bottom row
                         ui.horizontal(|ui| {
-                            ui.add_space(screen_width * 0.05);
+                            ui.add_space(8.0);
                             
-                            // Shift
                             let shift_btn = egui::Button::new("⇧")
-                                .fill(egui::Color32::from_rgb(55, 55, 60))
+                                .fill(egui::Color32::from_rgb(55, 55, 65))
                                 .rounding(egui::Rounding::same(8.0));
                             if ui.add_sized(egui::vec2(key_width * 1.2, key_height), shift_btn).clicked() {
                                 if let Some(last) = self.input_text.chars().last() {
@@ -151,40 +142,28 @@ impl eframe::App for MyApp {
                                 }
                             }
                             
-                            ui.add_space(6.0);
+                            ui.add_space(8.0);
                             
-                            // Space
                             let space_btn = egui::Button::new("Space")
-                                .fill(egui::Color32::from_rgb(55, 55, 60))
+                                .fill(egui::Color32::from_rgb(55, 55, 65))
                                 .rounding(egui::Rounding::same(8.0));
                             if ui.add_sized(egui::vec2(space_width, key_height), space_btn).clicked() {
                                 self.input_text.push(' ');
                             }
                             
-                            ui.add_space(6.0);
+                            ui.add_space(8.0);
                             
-                            // Backspace
                             let back_btn = egui::Button::new("⌫")
-                                .fill(egui::Color32::from_rgb(55, 55, 60))
+                                .fill(egui::Color32::from_rgb(55, 55, 65))
                                 .rounding(egui::Rounding::same(8.0));
                             if ui.add_sized(egui::vec2(key_width * 1.2, key_height), back_btn).clicked() {
                                 self.input_text.pop();
                             }
                             
-                            ui.add_space(screen_width * 0.05);
+                            ui.add_space(8.0);
                         });
                         
-                        ui.add_space(10.0);
-                        
-                        // Done button
-                        let done_btn = egui::Button::new("Done")
-                            .fill(egui::Color32::from_rgb(34, 197, 94))
-                            .rounding(egui::Rounding::same(20.0));
-                        if ui.add_sized(egui::vec2(screen_width * 0.25, 40.0), done_btn).clicked() {
-                            self.show_keyboard = false;
-                        }
-                        
-                        ui.add_space(8.0);
+                        ui.add_space(12.0);
                     });
                 });
         }
