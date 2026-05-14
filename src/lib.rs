@@ -3,6 +3,7 @@ mod app;
 
 use eframe::egui;
 use android_activity::AndroidApp;
+use std::time::Duration;
 
 #[no_mangle]
 fn android_main(app: AndroidApp) {
@@ -12,7 +13,7 @@ fn android_main(app: AndroidApp) {
 
     let mut options = eframe::NativeOptions {
         vsync: true,
-        renderer: eframe::Renderer::Glow, // Paksa Glow biar lebih hemat
+        renderer: eframe::Renderer::Glow,
         ..Default::default()
     };
     
@@ -35,9 +36,6 @@ fn android_main(app: AndroidApp) {
                 .unwrap()
                 .insert(0, "custom_font".to_owned());
             cc.egui_ctx.set_fonts(fonts);
-            
-            // Set minimal repaint - hanya saat dibutuhkan
-            cc.egui_ctx.set_repaint_interval(Duration::from_secs(1));
             
             Box::new(app::MyApp::default())
         }),

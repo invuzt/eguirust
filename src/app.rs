@@ -20,7 +20,7 @@ impl Default for MyApp {
 impl eframe::App for MyApp {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
         let now = Instant::now();
-        let needs_repaint = false;
+        let time_since_change = now.duration_since(self.last_change);
         
         egui::CentralPanel::default().show(ctx, |ui| {
             ui.vertical_centered(|ui| {
@@ -28,9 +28,8 @@ impl eframe::App for MyApp {
                 ui.heading(egui::RichText::new("Hello World!").size(48.0).color(egui::Color32::WHITE));
                 ui.add_space(30.0);
                 
-                // Tampilkan status
-                if now.duration_since(self.last_change) < Duration::from_secs(1) {
-                    ui.colored_label(egui::Color32::GREEN, "▶ Counter baru saja berubah");
+                if time_since_change < Duration::from_secs(1) {
+                    ui.colored_label(egui::Color32::GREEN, "▶ Updated!");
                 }
                 
                 ui.add_space(10.0);
@@ -42,23 +41,19 @@ impl eframe::App for MyApp {
                 if button.clicked() {
                     self.counter += 1;
                     self.last_change = now;
-                    ctx.request_repaint(); // Repaint karena ada perubahan state
+                    // HANYA repaint saat tombol diklik
+                    ctx.request_repaint();
                 }
                 
-                // Tampilkan info fps/update rate
                 let elapsed = now.duration_since(self.last_frame);
                 self.last_frame = now;
                 ui.add_space(50.0);
                 ui.colored_label(egui::Color32::from_gray(100), 
-                    format!("Update interval: {:?}", elapsed));
+                    format!("Frame time: {:.2}ms (idle = no repaint)", elapsed.as_secs_f64() * 1000.0));
             });
         });
         
-        // Set repaint interval 1 detik saat idle (biar ga boros)
-        // Tapi tetep ga repaint tanpa interaksi
-        if !needs_repaint && now.duration_since(self.last_change) > Duration::from_secs(1) {
-            // Hanya repaint setiap 1 detik untuk update timestamp
-            ctx.request_repaint_after(Duration::from_secs(1));
-        }
+        // Tidak panggil request_repaint_after karena itu tidak ada di API
+        // Biarkan egui mengatur default repaint interval
     }
 }
