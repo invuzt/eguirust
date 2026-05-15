@@ -11,6 +11,7 @@ pub struct DashboardApp {
     data_source: usize,
     btc_price: f64,
     eth_price: f64,
+    frame_count: u32,
 }
 
 impl Default for DashboardApp {
@@ -24,9 +25,9 @@ impl Default for DashboardApp {
             data_source: 0,
             btc_price: 50000.0,
             eth_price: 3000.0,
+            frame_count: 0,
         };
         
-        // Initialize with data
         for i in 0..100 {
             let x = i as f64 * 0.1;
             app.weather_history.push([x, 25.0 + 5.0 * (x * 0.3).sin()]);
@@ -43,14 +44,12 @@ impl DashboardApp {
     fn update_data(&mut self) {
         self.time += 0.016;
         
-        // Update weather
         if self.weather_history.len() > 200 {
             self.weather_history.remove(0);
         }
         let new_temp = 25.0 + 5.0 * (self.time * 0.5).sin() + (self.time * 0.2).cos() * 2.0;
         self.weather_history.push([self.time, new_temp]);
         
-        // Update crypto
         if self.crypto_history.len() > 200 {
             self.crypto_history.remove(0);
             self.crypto_history2.remove(0);
@@ -85,7 +84,11 @@ impl DashboardApp {
 
 impl eframe::App for DashboardApp {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
+        // FORCE REPAINT: agar animasi jalan terus tanpa disentuh
+        ctx.request_repaint();
+        
         self.update_data();
+        self.frame_count += 1;
         
         let screen_rect = ctx.input(|i| i.screen_rect());
         let screen_height = screen_rect.height();
@@ -126,7 +129,7 @@ impl eframe::App for DashboardApp {
                 ui.add_space(20.0);
                 ui.label(egui::RichText::new(format!("BTC: ${:.0} | ETH: ${:.0}", self.btc_price, self.eth_price)).size(14.0).color(egui::Color32::from_rgb(255, 200, 100)));
                 ui.add_space(10.0);
-                ui.label(egui::RichText::new(format!("Time: {:.1}s", self.time)).size(14.0).color(egui::Color32::from_gray(180)));
+                ui.label(egui::RichText::new(format!("Time: {:.1}s | Frame: {}", self.time, self.frame_count)).size(14.0).color(egui::Color32::from_gray(180)));
             });
             ui.add_space(8.0);
         });
@@ -272,6 +275,9 @@ impl eframe::App for DashboardApp {
                     });
                     ui.horizontal(|ui| {
                         ui.label("Features: Zoom/Pan | Real-time Animation | Legend | Interactive Controls");
+                    });
+                    ui.horizontal(|ui| {
+                        ui.label("Status: Animation running continuously (force repaint enabled)");
                     });
                 });
         });
