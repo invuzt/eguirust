@@ -12,7 +12,7 @@ winit = { version = "0.29", features = ["android-native-activity"] }
 android-activity = "0.5"
 log = "0.4"
 android_logger = "0.13"
-egui-graph-edit = "0.19"
+egui-graph-edit = "0.7"
 
 [package.metadata.android]
 package = "com.cak.vuzt"
