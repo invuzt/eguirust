@@ -10,7 +10,11 @@ fn android_main(app: AndroidApp) {
         android_logger::Config::default().with_max_level(log::LevelFilter::Info)
     );
 
-    let mut options = eframe::NativeOptions::default();
+    let mut options = eframe::NativeOptions {
+        renderer: eframe::Renderer::Glow,
+        ..Default::default()
+    };
+    
     let app_clone = app.clone();
     options.event_loop_builder = Some(Box::new(move |builder| {
         use winit::platform::android::EventLoopBuilderExtAndroid;

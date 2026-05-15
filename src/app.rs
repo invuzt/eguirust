@@ -24,7 +24,7 @@ impl eframe::App for MyApp {
                 ui.add_space(30.0);
                 
                 let button_width = (screen_width / 3.0).min(200.0);
-                let button = egui::Button::new(egui::RichText::new(format!("Click Me! ({} times)", self.counter)).size(24.0))
+                let button = egui::Button::new(egui::RichText::new(format!("Click Me! ({})", self.counter)).size(24.0))
                     .fill(egui::Color32::from_rgb(34, 197, 94))
                     .rounding(egui::Rounding::same(16.0));
                 
@@ -33,7 +33,7 @@ impl eframe::App for MyApp {
                 }
                 
                 ui.add_space(20.0);
-                ui.label(egui::RichText::new("Simple App - Works on Android").size(14.0).color(egui::Color32::from_gray(150)));
+                ui.label(egui::RichText::new("Vuzt - Android Rust App").size(14.0).color(egui::Color32::from_gray(150)));
             });
         });
     }
