@@ -25,23 +25,21 @@ fn android_main(app: AndroidApp) {
         "Vuzt Dashboard",
         options,
         Box::new(|cc| {
-            // Load custom font dari assets
+            // Load custom font dari assets (include_bytes untuk compile time)
             let mut fonts = egui::FontDefinitions::default();
             
-            // Coba load font.ttf jika ada
-            if let Ok(font_data) = std::fs::read("assets/font.ttf") {
-                fonts.font_data.insert(
-                    "custom_font".to_owned(),
-                    egui::FontData::from_owned(font_data),
-                );
-                fonts.families.get_mut(&egui::FontFamily::Proportional)
-                    .unwrap()
-                    .insert(0, "custom_font".to_owned());
-                println!("Custom font loaded successfully");
-            } else {
-                // Fallback ke font bawaan egui
-                println!("No custom font found, using default");
-            }
+            // Gunakan include_bytes untuk memasukkan font ke binary
+            let font_data = include_bytes!("../assets/font.ttf").to_vec();
+            fonts.font_data.insert(
+                "custom_font".to_owned(),
+                egui::FontData::from_owned(font_data),
+            );
+            fonts.families.get_mut(&egui::FontFamily::Proportional)
+                .unwrap()
+                .insert(0, "custom_font".to_owned());
+            fonts.families.get_mut(&egui::FontFamily::Monospace)
+                .unwrap()
+                .insert(0, "custom_font".to_owned());
             
             cc.egui_ctx.set_fonts(fonts);
             
