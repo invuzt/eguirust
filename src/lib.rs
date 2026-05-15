@@ -22,7 +22,7 @@ fn android_main(app: AndroidApp) {
     }));
 
     let _ = eframe::run_native(
-        "Vuzt",
+        "Vuzt Plot Demo",
         options,
         Box::new(|cc| {
             let mut fonts = egui::FontDefinitions::default();
@@ -35,7 +35,7 @@ fn android_main(app: AndroidApp) {
                 .insert(0, "custom_font".to_owned());
             cc.egui_ctx.set_fonts(fonts);
             
-            Box::new(app::MyApp::default())
+            Box::new(app::PlotApp::default())
         }),
     );
 }
