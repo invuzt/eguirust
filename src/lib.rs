@@ -22,19 +22,10 @@ fn android_main(app: AndroidApp) {
     }));
 
     let _ = eframe::run_native(
-        "Vuzt Data Dashboard",
+        "Vuzt Dashboard",
         options,
-        Box::new(|cc| {
-            let mut fonts = egui::FontDefinitions::default();
-            fonts.font_data.insert(
-                "custom_font".to_owned(),
-                egui::FontData::from_static(include_bytes!("../assets/font.ttf")),
-            );
-            fonts.families.get_mut(&egui::FontFamily::Proportional)
-                .unwrap()
-                .insert(0, "custom_font".to_owned());
-            cc.egui_ctx.set_fonts(fonts);
-            
+        Box::new(|_cc| {
+            // Tidak pakai custom font, pakai default egui
             Box::new(app::DashboardApp::default())
         }),
     );
