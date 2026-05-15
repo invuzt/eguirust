@@ -1,16 +1,14 @@
 use eframe::egui;
-use egui_plot::{Legend, Line, Plot, PlotBounds, PlotPoints, Points};
+use egui_plot::{Legend, Line, Plot, PlotPoints, Points};
 
 pub struct PlotApp {
     time: f64,
-    show_heatmap: bool,
 }
 
 impl Default for PlotApp {
     fn default() -> Self {
         Self {
             time: 0.0,
-            show_heatmap: false,
         }
     }
 }
@@ -35,7 +33,7 @@ impl PlotApp {
         )
     }
     
-    fn generate_scatter_data(&self) -> Vec<PlotPoints> {
+    fn generate_scatter_data(&self) -> (PlotPoints, PlotPoints) {
         let mut random_cluster = Vec::new();
         let mut normal_cluster = Vec::new();
         
@@ -45,10 +43,10 @@ impl PlotApp {
             normal_cluster.push([angle.cos() * 4.0 + 2.0, angle.sin() * 4.0 + 2.0]);
         }
         
-        vec![
+        (
             PlotPoints::new(random_cluster),
             PlotPoints::new(normal_cluster),
-        ]
+        )
     }
 }
 
@@ -63,30 +61,13 @@ impl eframe::App for PlotApp {
             ui.add_space(screen_height * 0.05);
             ui.horizontal(|ui| {
                 ui.add_space(12.0);
-                
-                if ui.button("Time Series").clicked() {
-                    self.show_heatmap = false;
-                }
-                if ui.button("Scatter Plot").clicked() {
-                    self.show_heatmap = false;
-                }
-                if ui.button("Reset View").clicked() {
-                    // reset
-                }
-                
-                ui.add_space(12.0);
-                ui.label(format!("Real-time mode | Time: {:.2}s", self.time));
+                ui.label(format!("Real-time Sensor Data | Time: {:.2}s", self.time));
             });
             ui.add_space(8.0);
         });
         
         egui::CentralPanel::default().show(ctx, |ui| {
             ui.add_space(10.0);
-            
-            if self.show_heatmap {
-                ui.label("Heatmap feature requires egui_plot 0.28+");
-                ui.label("Currently showing alternative visualization");
-            }
             
             // TIME SERIES PLOT (Line Chart)
             let (temp_data, pressure_data, fps_data) = self.generate_sensor_data();
@@ -124,15 +105,15 @@ impl eframe::App for PlotApp {
             ui.add_space(20.0);
             
             // SCATTER PLOT (Points)
-            let scatter_data = self.generate_scatter_data();
+            let (cluster_a, cluster_b) = self.generate_scatter_data();
             
-            let points1 = Points::new(scatter_data[0].to_owned())
+            let points1 = Points::new(cluster_a)
                 .color(egui::Color32::from_rgb(100, 200, 255))
                 .name("Cluster A")
                 .radius(4.0)
                 .filled(true);
             
-            let points2 = Points::new(scatter_data[1].to_owned())
+            let points2 = Points::new(cluster_b)
                 .color(egui::Color32::from_rgb(255, 200, 100))
                 .name("Cluster B")
                 .radius(4.0)
@@ -153,7 +134,7 @@ impl eframe::App for PlotApp {
                     plot_ui.points(points2);
                 });
             
-            ui.label("Top: Time series (temp, pressure, FPS) | Bottom: Scatter plot (2 clusters)");
+            ui.label("Top: Time series (temperature, pressure, FPS) | Bottom: Scatter plot with two clusters");
             
             ui.add_space(20.0);
             
@@ -163,11 +144,7 @@ impl eframe::App for PlotApp {
                 .inner_margin(egui::Margin::same(12.0))
                 .show(ui, |ui| {
                     ui.horizontal(|ui| {
-                        ui.label("Features:");
-                        ui.label("Zoom/Pan");
-                        ui.label("Multiple Axes");
-                        ui.label("Legend");
-                        ui.label("Real-time Update");
+                        ui.label("Features: Zoom/Pan | Multiple Y-Axis | Legend | Real-time Update");
                     });
                 });
         });
