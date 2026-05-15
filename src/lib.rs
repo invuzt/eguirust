@@ -24,8 +24,27 @@ fn android_main(app: AndroidApp) {
     let _ = eframe::run_native(
         "Vuzt Dashboard",
         options,
-        Box::new(|_cc| {
-            // Tidak pakai custom font, pakai default egui
+        Box::new(|cc| {
+            // Load custom font dari assets
+            let mut fonts = egui::FontDefinitions::default();
+            
+            // Coba load font.ttf jika ada
+            if let Ok(font_data) = std::fs::read("assets/font.ttf") {
+                fonts.font_data.insert(
+                    "custom_font".to_owned(),
+                    egui::FontData::from_owned(font_data),
+                );
+                fonts.families.get_mut(&egui::FontFamily::Proportional)
+                    .unwrap()
+                    .insert(0, "custom_font".to_owned());
+                println!("Custom font loaded successfully");
+            } else {
+                // Fallback ke font bawaan egui
+                println!("No custom font found, using default");
+            }
+            
+            cc.egui_ctx.set_fonts(fonts);
+            
             Box::new(app::DashboardApp::default())
         }),
     );
