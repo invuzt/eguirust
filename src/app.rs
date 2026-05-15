@@ -1,109 +1,41 @@
 use eframe::egui;
-use egui_graphs::{Graph, GraphView};
-use petgraph::graph::NodeIndex;
-use petgraph::prelude::*;
-use std::collections::HashMap;
 
-#[derive(Clone, Copy, PartialEq, Debug)]
-enum NodeType {
-    Input,
-    Process,
-    Output,
-}
-
-pub struct GraphApp {
-    graph: Graph<String, String>,
-    selected_node: Option<NodeIndex>,
-    node_type_map: HashMap<NodeIndex, NodeType>,
+pub struct MyApp {
     counter: i32,
 }
 
-impl Default for GraphApp {
+impl Default for MyApp {
     fn default() -> Self {
-        let mut graph = Graph::new();
-        let mut node_type_map = HashMap::new();
-        
-        let node1 = graph.add_node("Start".to_string());
-        let node2 = graph.add_node("Process".to_string());
-        let node3 = graph.add_node("End".to_string());
-        
-        graph.add_edge(node1, node2, "flow".to_string());
-        graph.add_edge(node2, node3, "result".to_string());
-        
-        node_type_map.insert(node1, NodeType::Input);
-        node_type_map.insert(node2, NodeType::Process);
-        node_type_map.insert(node3, NodeType::Output);
-        
-        Self {
-            graph,
-            selected_node: None,
-            node_type_map,
-            counter: 3,
-        }
+        Self { counter: 0 }
     }
 }
 
-impl eframe::App for GraphApp {
+impl eframe::App for MyApp {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
         let screen_rect = ctx.input(|i| i.screen_rect());
+        let screen_width = screen_rect.width();
         let screen_height = screen_rect.height();
         
-        egui::TopBottomPanel::top("toolbar").show(ctx, |ui| {
-            ui.add_space(screen_height * 0.05);
-            ui.horizontal(|ui| {
-                ui.add_space(12.0);
+        egui::CentralPanel::default().show(ctx, |ui| {
+            ui.vertical_centered(|ui| {
+                ui.add_space(screen_height * 0.2);
                 
-                if ui.button("➕ Add Node").clicked() {
-                    let id = self.graph.add_node(format!("Node_{}", self.counter));
-                    self.node_type_map.insert(id, NodeType::Process);
+                ui.heading(egui::RichText::new("Hello World!").size(48.0).color(egui::Color32::WHITE));
+                ui.add_space(30.0);
+                
+                let button_width = (screen_width / 3.0).min(200.0);
+                let button = egui::Button::new(egui::RichText::new(format!("Click Me! ({})", self.counter)).size(24.0))
+                    .fill(egui::Color32::from_rgb(34, 197, 94))
+                    .rounding(egui::Rounding::same(16.0));
+                
+                if ui.add_sized(egui::vec2(button_width, 60.0), button).clicked() {
                     self.counter += 1;
                 }
                 
-                if ui.button("🗑 Clear Selected").clicked() {
-                    if let Some(node) = self.selected_node {
-                        self.graph.remove_node(node);
-                        self.node_type_map.remove(&node);
-                        self.selected_node = None;
-                    }
-                }
-                
-                ui.add_space(12.0);
-                if let Some(node) = self.selected_node {
-                    if let Some(label) = self.graph.node_weight(node) {
-                        ui.label(format!("Selected: {}", label));
-                    }
-                }
-            });
-            ui.add_space(8.0);
-        });
-        
-        egui::TopBottomPanel::bottom("info").show(ctx, |ui| {
-            ui.add_space(8.0);
-            ui.horizontal(|ui| {
-                ui.label(format!("Nodes: {} | Edges: {}", 
-                    self.graph.node_count(), 
-                    self.graph.edge_count()
-                ));
                 ui.add_space(20.0);
-                ui.label("💡 Tip: Click node to select, drag to move, pinch to zoom");
+                ui.label(egui::RichText::new("Vuzt - Android Rust App").size(14.0).color(egui::Color32::from_gray(150)));
+                ui.label(egui::RichText::new("Egui version 0.27 - Stable").size(12.0).color(egui::Color32::from_gray(100)));
             });
-            ui.add_space(8.0);
-        });
-        
-        egui::CentralPanel::default().show(ctx, |ui| {
-            let mut graph_view = GraphView::new(&mut self.graph);
-            let response = ui.add(&mut graph_view);
-            
-            if let Some(selected) = graph_view.selected_nodes().iter().next() {
-                self.selected_node = Some(*selected);
-            }
-            
-            if response.secondary_clicked() {
-                let mut menu = egui::popup::popup_menu(ui, response.rect, "node_menu");
-                if menu.show().clicked() {
-                    // Handle menu items
-                }
-            }
         });
     }
 }
