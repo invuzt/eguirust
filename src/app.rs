@@ -92,101 +92,58 @@ impl eframe::App for DashboardApp {
         let screen_width = screen_rect.width();
         let screen_height = screen_rect.height();
         
-        // Responsive sizing untuk portrait
         let is_portrait = screen_height > screen_width;
         let top_padding = if is_portrait { screen_height * 0.12 } else { screen_height * 0.08 };
-        let plot_height = if is_portrait { screen_height * 0.45 } else { screen_height * 0.55 };
-        let button_width = (screen_width / 4.5).max(60.0).min(90.0);
+        let plot_height = if is_portrait { screen_height * 0.55 } else { screen_height * 0.6 };
         
         egui::TopBottomPanel::top("toolbar").show(ctx, |ui| {
             ui.add_space(top_padding);
             ui.horizontal(|ui| {
-                ui.add_space(8.0);
+                ui.add_space(12.0);
                 
-                // Responsive button grid untuk portrait
-                if is_portrait {
-                    ui.vertical(|ui| {
-                        ui.horizontal(|ui| {
-                            let weather_btn = egui::Button::new("Weather")
-                                .fill(if self.data_source == 0 { egui::Color32::from_rgb(34, 197, 94) } else { egui::Color32::from_rgb(60, 60, 70) })
-                                .rounding(egui::Rounding::same(20.0));
-                            if ui.add_sized(egui::vec2(button_width, 32.0), weather_btn).clicked() {
-                                self.data_source = 0;
-                            }
-                            
-                            ui.add_space(8.0);
-                            
-                            let crypto_btn = egui::Button::new("Crypto")
-                                .fill(if self.data_source == 1 { egui::Color32::from_rgb(34, 197, 94) } else { egui::Color32::from_rgb(60, 60, 70) })
-                                .rounding(egui::Rounding::same(20.0));
-                            if ui.add_sized(egui::vec2(button_width, 32.0), crypto_btn).clicked() {
-                                self.data_source = 1;
-                            }
-                            
-                            ui.add_space(8.0);
-                            
-                            let scatter_btn = egui::Button::new("Scatter")
-                                .fill(if self.data_source == 2 { egui::Color32::from_rgb(34, 197, 94) } else { egui::Color32::from_rgb(60, 60, 70) })
-                                .rounding(egui::Rounding::same(20.0));
-                            if ui.add_sized(egui::vec2(button_width, 32.0), scatter_btn).clicked() {
-                                self.data_source = 2;
-                            }
-                            
-                            ui.add_space(8.0);
-                            
-                            let random_btn = egui::Button::new("Random")
-                                .fill(if self.data_source == 3 { egui::Color32::from_rgb(34, 197, 94) } else { egui::Color32::from_rgb(60, 60, 70) })
-                                .rounding(egui::Rounding::same(20.0));
-                            if ui.add_sized(egui::vec2(button_width, 32.0), random_btn).clicked() {
-                                self.data_source = 3;
-                            }
-                        });
-                        
-                        ui.add_space(8.0);
-                        
-                        ui.horizontal(|ui| {
-                            ui.label(egui::RichText::new(format!("BTC: ${:.0}", self.btc_price)).size(12.0).color(egui::Color32::from_rgb(255, 200, 100)));
-                            ui.add_space(12.0);
-                            ui.label(egui::RichText::new(format!("ETH: ${:.0}", self.eth_price)).size(12.0).color(egui::Color32::from_rgb(255, 200, 100)));
-                            ui.add_space(12.0);
-                            ui.label(egui::RichText::new(format!("Time: {:.1}s", self.time)).size(12.0).color(egui::Color32::from_gray(180)));
-                        });
+                // Dropdown menu untuk semua data source
+                egui::menu::bar(ui, |ui| {
+                    ui.menu_button("Data Source", |ui| {
+                        if ui.button("Weather (Temperature)").clicked() {
+                            self.data_source = 0;
+                            ui.close_menu();
+                        }
+                        if ui.button("Crypto (BTC / ETH)").clicked() {
+                            self.data_source = 1;
+                            ui.close_menu();
+                        }
+                        if ui.button("Scatter Plot (Clusters)").clicked() {
+                            self.data_source = 2;
+                            ui.close_menu();
+                        }
+                        if ui.button("Random Generator").clicked() {
+                            self.data_source = 3;
+                            ui.close_menu();
+                        }
                     });
-                } else {
-                    // Landscape mode: horizontal layout
-                    let weather_btn = egui::Button::new("Weather")
-                        .fill(if self.data_source == 0 { egui::Color32::from_rgb(34, 197, 94) } else { egui::Color32::from_rgb(60, 60, 70) })
-                        .rounding(egui::Rounding::same(20.0));
-                    if ui.add_sized(egui::vec2(80.0, 36.0), weather_btn).clicked() {
-                        self.data_source = 0;
-                    }
-                    
-                    let crypto_btn = egui::Button::new("Crypto")
-                        .fill(if self.data_source == 1 { egui::Color32::from_rgb(34, 197, 94) } else { egui::Color32::from_rgb(60, 60, 70) })
-                        .rounding(egui::Rounding::same(20.0));
-                    if ui.add_sized(egui::vec2(80.0, 36.0), crypto_btn).clicked() {
-                        self.data_source = 1;
-                    }
-                    
-                    let scatter_btn = egui::Button::new("Scatter")
-                        .fill(if self.data_source == 2 { egui::Color32::from_rgb(34, 197, 94) } else { egui::Color32::from_rgb(60, 60, 70) })
-                        .rounding(egui::Rounding::same(20.0));
-                    if ui.add_sized(egui::vec2(80.0, 36.0), scatter_btn).clicked() {
-                        self.data_source = 2;
-                    }
-                    
-                    let random_btn = egui::Button::new("Random")
-                        .fill(if self.data_source == 3 { egui::Color32::from_rgb(34, 197, 94) } else { egui::Color32::from_rgb(60, 60, 70) })
-                        .rounding(egui::Rounding::same(20.0));
-                    if ui.add_sized(egui::vec2(80.0, 36.0), random_btn).clicked() {
-                        self.data_source = 3;
-                    }
-                    
-                    ui.add_space(20.0);
-                    ui.label(egui::RichText::new(format!("BTC: ${:.0} | ETH: ${:.0}", self.btc_price, self.eth_price)).size(14.0).color(egui::Color32::from_rgb(255, 200, 100)));
-                    ui.add_space(10.0);
-                    ui.label(egui::RichText::new(format!("Time: {:.1}s", self.time)).size(14.0).color(egui::Color32::from_gray(180)));
-                }
+                });
+                
+                ui.add_space(20.0);
+                
+                // Status info
+                let current_label = match self.data_source {
+                    0 => "Weather",
+                    1 => "Crypto",
+                    2 => "Scatter",
+                    _ => "Random",
+                };
+                ui.label(egui::RichText::new(format!("Current: {}", current_label)).size(14.0).color(egui::Color32::from_rgb(100, 200, 255)));
+                
+                ui.add_space(20.0);
+                
+                ui.label(egui::RichText::new(format!("BTC: ${:.0}", self.btc_price)).size(13.0).color(egui::Color32::from_rgb(255, 200, 100)));
+                ui.add_space(12.0);
+                ui.label(egui::RichText::new(format!("ETH: ${:.0}", self.eth_price)).size(13.0).color(egui::Color32::from_rgb(255, 200, 100)));
+                ui.add_space(12.0);
+                ui.label(egui::RichText::new(format!("Time: {:.1}s", self.time)).size(13.0).color(egui::Color32::from_gray(180)));
+                
+                ui.add_space(12.0);
+                ui.label(egui::RichText::new(format!("FPS: {:.0}", self.frame_count as f64 / self.time.max(0.001))).size(13.0).color(egui::Color32::from_gray(150)));
             });
             ui.add_space(8.0);
         });
@@ -215,7 +172,7 @@ impl eframe::App for DashboardApp {
                             plot_ui.line(temp_line);
                         });
                     
-                    ui.label(egui::RichText::new("Weather Simulation: Real-time temperature data").color(egui::Color32::from_gray(180)).size(11.0));
+                    ui.label(egui::RichText::new("Weather Simulation: Real-time temperature with sine wave pattern").color(egui::Color32::from_gray(180)).size(11.0));
                 }
                 
                 1 => {
@@ -246,7 +203,7 @@ impl eframe::App for DashboardApp {
                             plot_ui.line(eth_line);
                         });
                     
-                    ui.label(egui::RichText::new("Crypto Simulation: BTC and ETH price movement").color(egui::Color32::from_gray(180)).size(11.0));
+                    ui.label(egui::RichText::new("Crypto Simulation: Bitcoin and Ethereum price with market-like volatility").color(egui::Color32::from_gray(180)).size(11.0));
                 }
                 
                 2 => {
@@ -254,20 +211,20 @@ impl eframe::App for DashboardApp {
                     
                     let points1 = Points::new(cluster1)
                         .color(egui::Color32::from_rgb(100, 200, 255))
-                        .name("Cluster A")
+                        .name("Cluster Alpha")
                         .radius(5.0)
                         .filled(true);
                     
                     let points2 = Points::new(cluster2)
                         .color(egui::Color32::from_rgb(255, 100, 100))
-                        .name("Cluster B")
+                        .name("Cluster Beta")
                         .radius(5.0)
                         .filled(true)
                         .shape(egui_plot::MarkerShape::Diamond);
                     
                     let points3 = Points::new(cluster3)
                         .color(egui::Color32::from_rgb(100, 255, 100))
-                        .name("Cluster C")
+                        .name("Cluster Gamma")
                         .radius(5.0)
                         .filled(true)
                         .shape(egui_plot::MarkerShape::Cross);
@@ -287,7 +244,7 @@ impl eframe::App for DashboardApp {
                             plot_ui.points(points3);
                         });
                     
-                    ui.label(egui::RichText::new("Scatter Plot: Three synthetic data clusters").color(egui::Color32::from_gray(180)).size(11.0));
+                    ui.label(egui::RichText::new("Scatter Plot: Three distinct synthetic data clusters").color(egui::Color32::from_gray(180)).size(11.0));
                 }
                 
                 _ => {
@@ -322,24 +279,20 @@ impl eframe::App for DashboardApp {
             
             ui.add_space(12.0);
             
-            // Info panel - lebih ringkas di portrait
-            let info_height = if is_portrait { 70.0 } else { 50.0 };
             egui::Frame::none()
                 .fill(egui::Color32::from_rgb(30, 30, 35))
                 .rounding(egui::Rounding::same(8.0))
                 .inner_margin(egui::Margin::same(8.0))
                 .show(ui, |ui| {
                     if is_portrait {
-                        ui.label(egui::RichText::new("Zoom/Pan | Real-time | Legend").color(egui::Color32::from_gray(180)).size(10.0));
-                        ui.label(egui::RichText::new("Touch: pinch zoom, drag to pan").color(egui::Color32::from_gray(150)).size(9.0));
+                        ui.label(egui::RichText::new("Pinch to zoom | Drag to pan").color(egui::Color32::from_gray(180)).size(10.0));
                     } else {
                         ui.horizontal(|ui| {
-                            ui.label("Zoom/Pan | Real-time | Legend | Interactive");
+                            ui.label("Zoom/Pan | Real-time Animation | Legend | Interactive");
                         });
                     }
                 });
             
-            // Extra space di bottom untuk scroll
             ui.add_space(20.0);
         });
     }
