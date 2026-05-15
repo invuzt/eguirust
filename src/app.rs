@@ -43,7 +43,6 @@ impl eframe::App for MyApp {
         let screen_width = screen_rect.width();
         let screen_height = screen_rect.height();
         
-        // Responsive grid calculation
         let padding = 12.0;
         let gap = 12.0;
         let cols = if screen_width < 400.0 { 2 } else if screen_width < 700.0 { 3 } else { 4 };
@@ -52,20 +51,17 @@ impl eframe::App for MyApp {
         egui::CentralPanel::default().show(ctx, |ui| {
             ui.add_space(screen_height * 0.05);
             
-            // Header
             ui.vertical_centered(|ui| {
                 ui.heading(egui::RichText::new("Bento Dashboard").size(28.0).color(egui::Color32::WHITE));
                 ui.label(egui::RichText::new("Responsive masonry layout").size(14.0).color(egui::Color32::from_gray(150)));
                 ui.add_space(20.0);
             });
             
-            // Scroll area untuk bento grid
             egui::ScrollArea::vertical()
                 .auto_shrink([false; 2])
                 .show(ui, |ui| {
                     ui.add_space(8.0);
                     
-                    // Masonry grid menggunakan horizontal_wrapped
                     ui.horizontal_wrapped(|ui| {
                         for (idx, card) in self.cards.iter_mut().enumerate() {
                             let card_width = match card.size {
@@ -84,7 +80,7 @@ impl eframe::App for MyApp {
                             
                             let frame = egui::Frame::none()
                                 .fill(card.color)
-                                .corner_radius(egui::Rounding::same(16.0))
+                                .rounding(egui::Rounding::same(16.0))
                                 .inner_margin(egui::Margin::same(12.0));
                             
                             frame.show(ui, |ui| {
@@ -95,7 +91,6 @@ impl eframe::App for MyApp {
                                     ui.label(egui::RichText::new(&card.value).size(24.0).color(egui::Color32::WHITE).strong());
                                     ui.add_space(4.0);
                                     
-                                    // Small chart indicator
                                     match idx % 4 {
                                         0 => { ui.label(egui::RichText::new("↑ +12%").size(11.0).color(egui::Color32::from_rgb(150, 255, 150))); }
                                         1 => { ui.label(egui::RichText::new("↓ -3%").size(11.0).color(egui::Color32::from_rgb(255, 150, 150))); }
@@ -110,12 +105,11 @@ impl eframe::App for MyApp {
                     
                     ui.add_space(20.0);
                     
-                    // Full width card
                     ui.horizontal_wrapped(|ui| {
                         let full_width = screen_width - padding * 2.0;
                         let full_frame = egui::Frame::none()
                             .fill(egui::Color32::from_rgb(40, 40, 48))
-                            .corner_radius(egui::Rounding::same(16.0))
+                            .rounding(egui::Rounding::same(16.0))
                             .inner_margin(egui::Margin::same(16.0));
                         
                         full_frame.show(ui, |ui| {
