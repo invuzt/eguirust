@@ -65,42 +65,9 @@ impl eframe::App for MyApp {
                 .show(ui, |ui| {
                     ui.add_space(8.0);
                     
-                    // Use horizontal_wrapped untuk wrap ke bawah otomatis
-                    let mut x_offset = 0.0;
-                    let mut row_height = 0.0;
-                    let mut current_row_cards: Vec<(usize, f32, f32)> = Vec::new();
-                    
-                    // Layout calculation untuk masonry wrap
-                    for (idx, card) in self.cards.iter().enumerate() {
-                        let card_width = match card.size {
-                            CardSize::Small => card_base_width,
-                            CardSize::Medium => card_base_width * 1.5,
-                            CardSize::Large => card_base_width * 2.0,
-                            CardSize::Wide => card_base_width * 2.5,
-                        };
-                        
-                        let card_height = match card.size {
-                            CardSize::Small => card_width * 0.6,
-                            CardSize::Medium => card_width * 0.7,
-                            CardSize::Large => card_width * 0.8,
-                            CardSize::Wide => card_width * 0.5,
-                        };
-                        
-                        if x_offset + card_width > screen_width - padding * 2.0 {
-                            // Turun ke baris baru
-                            x_offset = 0.0;
-                            row_height = 0.0;
-                        }
-                        
-                        current_row_cards.push((idx, x_offset, card_height));
-                        x_offset += card_width + gap;
-                        row_height = row_height.max(card_height);
-                    }
-                    
-                    // Render dengan layout wrap
-                    let mut current_x = 0.0;
-                    let mut current_y = 0.0;
-                    let mut row_max_height = 0.0;
+                    let mut current_x: f32 = 0.0;
+                    let mut current_y: f32 = 0.0;
+                    let mut row_max_height: f32 = 0.0;
                     
                     for (idx, card) in self.cards.iter_mut().enumerate() {
                         let card_width = match card.size {
@@ -128,7 +95,6 @@ impl eframe::App for MyApp {
                             .rounding(egui::Rounding::same(16.0))
                             .inner_margin(egui::Margin::same(12.0));
                         
-                        // Position using absolute layout untuk wrap yang presisi
                         ui.allocate_ui_at_rect(
                             egui::Rect::from_min_size(
                                 egui::pos2(current_x + padding, current_y + 80.0),
@@ -154,12 +120,12 @@ impl eframe::App for MyApp {
                         );
                         
                         current_x += card_width + gap;
-                        row_max_height = row_max_height.max(card_height);
+                        if card_height > row_max_height {
+                            row_max_height = card_height;
+                        }
                     }
                     
                     let last_y = current_y + row_max_height + 120.0;
-                    
-                    // Full width summary card di bagian bawah
                     ui.add_space(last_y - 80.0);
                     ui.add_space(20.0);
                     
