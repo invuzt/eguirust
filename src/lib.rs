@@ -31,7 +31,7 @@ fn android_main(app: AndroidApp) {
                 .insert(0, "custom_font".to_owned());
             cc.egui_ctx.set_fonts(fonts);
             
-            Box::new(app::NodeGraphExampleSimple::default())
+            Box::new(app::MyApp::default())
         }),
     );
 }
