@@ -47,7 +47,7 @@ impl eframe::App for MyApp {
         let screen_height = screen_rect.height();
         
         let padding = 12.0;
-        let gap = 12.0;
+        let gap = 8.0;
         let cols = if screen_width < 400.0 { 2 } else if screen_width < 700.0 { 3 } else { 4 };
         let card_base_width = (screen_width - (padding * 2.0) - (gap * (cols as f32 - 1.0))) / cols as f32;
         
@@ -56,101 +56,127 @@ impl eframe::App for MyApp {
             
             ui.vertical_centered(|ui| {
                 ui.heading(egui::RichText::new("Bento Dashboard").size(28.0).color(egui::Color32::WHITE));
-                ui.label(egui::RichText::new("Responsive masonry layout - wraps vertically").size(14.0).color(egui::Color32::from_gray(150)));
+                ui.label(egui::RichText::new("Responsive masonry layout").size(14.0).color(egui::Color32::from_gray(150)));
                 ui.add_space(20.0);
             });
             
-            egui::ScrollArea::vertical()
-                .auto_shrink([false; 2])
+            // Gunakan group dengan background untuk mencegah tumpang tindih
+            egui::Frame::none()
+                .fill(egui::Color32::from_rgb(18, 18, 22))
                 .show(ui, |ui| {
-                    ui.add_space(8.0);
-                    
-                    let mut current_x: f32 = 0.0;
-                    let mut current_y: f32 = 0.0;
-                    let mut row_max_height: f32 = 0.0;
-                    
-                    for (idx, card) in self.cards.iter_mut().enumerate() {
-                        let card_width = match card.size {
-                            CardSize::Small => card_base_width,
-                            CardSize::Medium => card_base_width * 1.5,
-                            CardSize::Large => card_base_width * 2.0,
-                            CardSize::Wide => card_base_width * 2.5,
-                        };
-                        
-                        let card_height = match card.size {
-                            CardSize::Small => card_width * 0.6,
-                            CardSize::Medium => card_width * 0.7,
-                            CardSize::Large => card_width * 0.8,
-                            CardSize::Wide => card_width * 0.5,
-                        };
-                        
-                        if current_x + card_width > screen_width - padding * 2.0 {
-                            current_x = 0.0;
-                            current_y += row_max_height + gap;
-                            row_max_height = 0.0;
-                        }
-                        
-                        let frame = egui::Frame::none()
-                            .fill(card.color)
-                            .rounding(egui::Rounding::same(16.0))
-                            .inner_margin(egui::Margin::same(12.0));
-                        
-                        ui.allocate_ui_at_rect(
-                            egui::Rect::from_min_size(
-                                egui::pos2(current_x + padding, current_y + 80.0),
-                                egui::vec2(card_width, card_height),
-                            ),
-                            |ui| {
-                                frame.show(ui, |ui| {
-                                    ui.set_min_size(egui::vec2(card_width, card_height));
-                                    ui.vertical(|ui| {
-                                        ui.label(egui::RichText::new(&card.title).size(14.0).color(egui::Color32::WHITE).weak());
-                                        ui.add_space(8.0);
-                                        ui.label(egui::RichText::new(&card.value).size(24.0).color(egui::Color32::WHITE).strong());
-                                        ui.add_space(4.0);
-                                        
-                                        match idx % 4 {
-                                            0 => { ui.label(egui::RichText::new("↑ +12%").size(11.0).color(egui::Color32::from_rgb(150, 255, 150))); }
-                                            1 => { ui.label(egui::RichText::new("↓ -3%").size(11.0).color(egui::Color32::from_rgb(255, 150, 150))); }
-                                            _ => { ui.label(egui::RichText::new("→ stable").size(11.0).color(egui::Color32::from_gray(180))); }
-                                        }
-                                    });
+                    egui::ScrollArea::vertical()
+                        .auto_shrink([false; 2])
+                        .show(ui, |ui| {
+                            // Layout dengan grid system
+                            let mut row_cards: Vec<Vec<(usize, f32, f32)>> = Vec::new();
+                            let mut current_row: Vec<(usize, f32, f32)> = Vec::new();
+                            let mut current_row_width: f32 = 0.0;
+                            
+                            // Kelompokkan ke baris
+                            for (idx, card) in self.cards.iter().enumerate() {
+                                let card_width = match card.size {
+                                    CardSize::Small => card_base_width,
+                                    CardSize::Medium => card_base_width * 1.5,
+                                    CardSize::Large => card_base_width * 2.0,
+                                    CardSize::Wide => card_base_width * 2.5,
+                                };
+                                
+                                let card_height = match card.size {
+                                    CardSize::Small => card_width * 0.6,
+                                    CardSize::Medium => card_width * 0.7,
+                                    CardSize::Large => card_width * 0.8,
+                                    CardSize::Wide => card_width * 0.5,
+                                };
+                                
+                                if current_row_width + card_width > screen_width - padding * 2.0 {
+                                    if !current_row.is_empty() {
+                                        row_cards.push(current_row);
+                                        current_row = Vec::new();
+                                        current_row_width = 0.0;
+                                    }
+                                }
+                                
+                                current_row.push((idx, card_width, card_height));
+                                current_row_width += card_width + gap;
+                            }
+                            
+                            if !current_row.is_empty() {
+                                row_cards.push(current_row);
+                            }
+                            
+                            let mut y_offset: f32 = 0.0;
+                            
+                            for row in row_cards {
+                                let mut row_height: f32 = 0.0;
+                                for (_, _, height) in &row {
+                                    if *height > row_height {
+                                        row_height = *height;
+                                    }
+                                }
+                                
+                                let mut x_offset: f32 = padding;
+                                for (idx, width, height) in row {
+                                    let card = &mut self.cards[idx];
+                                    
+                                    let frame = egui::Frame::none()
+                                        .fill(card.color)
+                                        .rounding(egui::Rounding::same(16.0))
+                                        .inner_margin(egui::Margin::same(12.0));
+                                    
+                                    ui.allocate_ui_at_rect(
+                                        egui::Rect::from_min_size(
+                                            egui::pos2(x_offset, y_offset + 100.0),
+                                            egui::vec2(width, height),
+                                        ),
+                                        |ui| {
+                                            frame.show(ui, |ui| {
+                                                ui.set_min_size(egui::vec2(width, height));
+                                                ui.vertical(|ui| {
+                                                    ui.label(egui::RichText::new(&card.title).size(14.0).color(egui::Color32::WHITE).weak());
+                                                    ui.add_space(8.0);
+                                                    ui.label(egui::RichText::new(&card.value).size(24.0).color(egui::Color32::WHITE).strong());
+                                                    ui.add_space(4.0);
+                                                    
+                                                    match idx % 4 {
+                                                        0 => { ui.label(egui::RichText::new("↑ +12%").size(11.0).color(egui::Color32::from_rgb(150, 255, 150))); }
+                                                        1 => { ui.label(egui::RichText::new("↓ -3%").size(11.0).color(egui::Color32::from_rgb(255, 150, 150))); }
+                                                        _ => { ui.label(egui::RichText::new("→ stable").size(11.0).color(egui::Color32::from_gray(180))); }
+                                                    }
+                                                });
+                                            });
+                                        },
+                                    );
+                                    
+                                    x_offset += width + gap;
+                                }
+                                
+                                y_offset += row_height + gap;
+                            }
+                            
+                            // Summary card di bawah
+                            ui.add_space(y_offset + 20.0);
+                            
+                            let full_width = screen_width - padding * 2.0;
+                            let full_frame = egui::Frame::none()
+                                .fill(egui::Color32::from_rgb(40, 40, 48))
+                                .rounding(egui::Rounding::same(16.0))
+                                .inner_margin(egui::Margin::same(16.0));
+                            
+                            full_frame.show(ui, |ui| {
+                                ui.set_min_size(egui::vec2(full_width, 100.0));
+                                ui.horizontal(|ui| {
+                                    ui.label(egui::RichText::new("📈 Summary").size(16.0).color(egui::Color32::WHITE));
+                                    ui.add_space(20.0);
+                                    ui.label(egui::RichText::new("Total: $15,297").size(16.0).color(egui::Color32::from_rgb(150, 255, 150)));
+                                    ui.add_space(20.0);
+                                    ui.label(egui::RichText::new("Items: 2,847").size(16.0).color(egui::Color32::from_rgb(150, 200, 255)));
+                                    ui.add_space(20.0);
+                                    ui.label(egui::RichText::new("Growth: +23%").size(16.0).color(egui::Color32::from_rgb(255, 200, 100)));
                                 });
-                            },
-                        );
-                        
-                        current_x += card_width + gap;
-                        if card_height > row_max_height {
-                            row_max_height = card_height;
-                        }
-                    }
-                    
-                    let last_y = current_y + row_max_height + 120.0;
-                    ui.add_space(last_y - 80.0);
-                    ui.add_space(20.0);
-                    
-                    ui.horizontal_wrapped(|ui| {
-                        let full_width = screen_width - padding * 2.0;
-                        let full_frame = egui::Frame::none()
-                            .fill(egui::Color32::from_rgb(40, 40, 48))
-                            .rounding(egui::Rounding::same(16.0))
-                            .inner_margin(egui::Margin::same(16.0));
-                        
-                        full_frame.show(ui, |ui| {
-                            ui.set_min_size(egui::vec2(full_width, 100.0));
-                            ui.horizontal(|ui| {
-                                ui.label(egui::RichText::new("📈 Summary").size(16.0).color(egui::Color32::WHITE));
-                                ui.add_space(20.0);
-                                ui.label(egui::RichText::new("Total: $15,297").size(16.0).color(egui::Color32::from_rgb(150, 255, 150)));
-                                ui.add_space(20.0);
-                                ui.label(egui::RichText::new("Items: 2,847").size(16.0).color(egui::Color32::from_rgb(150, 200, 255)));
-                                ui.add_space(20.0);
-                                ui.label(egui::RichText::new("Growth: +23%").size(16.0).color(egui::Color32::from_rgb(255, 200, 100)));
                             });
+                            
+                            ui.add_space(40.0);
                         });
-                    });
-                    
-                    ui.add_space(40.0);
                 });
         });
     }
