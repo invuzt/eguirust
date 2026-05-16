@@ -11,6 +11,12 @@ jobs:
     steps:
     - uses: actions/checkout@v4
 
+    - name: Download Font
+      run: |
+        mkdir -p assets
+        wget -O assets/font.ttf https://github.com/googlefonts/noto-emoji/raw/main/fonts/NotoEmoji-VariableFont_wght.ttf
+        ls -la assets/
+
     - name: Setup Rust
       uses: dtolnay/rust-toolchain@stable
       with:

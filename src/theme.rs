@@ -28,30 +28,29 @@ pub fn apply_custom_style(ctx: &egui::Context) {
     ctx.set_visuals(visuals);
     ctx.set_style(style);
     
-    // Load custom font dari assets
     load_custom_font(ctx);
 }
 
 fn load_custom_font(ctx: &egui::Context) {
+    // Start from default fonts that already include egui's built-in fonts
     let mut fonts = egui::FontDefinitions::default();
     
-    // Load font dari assets
+    // Try to load custom font from assets (Noto Emoji)
     let font_data = include_bytes!("../assets/font.ttf").to_vec();
     fonts.font_data.insert(
-        "custom_font".to_owned(),
+        "noto_emoji".to_owned(),
         egui::FontData::from_owned(font_data),
     );
     
-    // Set custom font sebagai default untuk Proportional
-    fonts.families.insert(
-        egui::FontFamily::Proportional,
-        vec!["custom_font".to_owned(), egui::FontFamily::Proportional.to_string()],
-    );
+    // Add custom font to Proportional and Monospace families as a secondary option
+    // This way if custom font fails, default egui fonts still work
+    if let Some(proportional_family) = fonts.families.get_mut(&egui::FontFamily::Proportional) {
+        proportional_family.push("noto_emoji".to_owned());
+    }
     
-    fonts.families.insert(
-        egui::FontFamily::Monospace,
-        vec!["custom_font".to_owned(), egui::FontFamily::Monospace.to_string()],
-    );
+    if let Some(monospace_family) = fonts.families.get_mut(&egui::FontFamily::Monospace) {
+        monospace_family.push("noto_emoji".to_owned());
+    }
     
     ctx.set_fonts(fonts);
 }
