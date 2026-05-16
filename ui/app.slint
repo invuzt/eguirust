@@ -1,21 +1,19 @@
-import { VerticalBox, HorizontalBox, Button, TextEdit, StandardButton } from "std-widgets.slint";
+import { VerticalBox, HorizontalBox, Button, TextEdit } from "std-widgets.slint";
 
 export component MainWindow inherits Window {
-    title: "Vuzt with Slint + Egui";
+    title: "Vuzt with Slint";
     width: 400px;
-    height: 600px;
+    height: 500px;
     
-    // State untuk input teks
     property <string> input_text: "";
-    property <string> output_text: "";
-    property <bool> show_egui: false;
+    property <int> counter: 0;
     
     VerticalBox {
         padding: 20px;
         spacing: 15px;
         
         Text {
-            text: "Vuzt Hybrid App";
+            text: "Vuzt Slint App";
             font-size: 24px;
             font-weight: 800;
             horizontal-alignment: center;
@@ -23,7 +21,7 @@ export component MainWindow inherits Window {
         }
         
         Text {
-            text: "Slint UI + Egui Canvas";
+            text: "Native Slint UI on Android";
             font-size: 14px;
             horizontal-alignment: center;
             color: #888888;
@@ -32,61 +30,47 @@ export component MainWindow inherits Window {
         Rectangle {
             height: 1px;
             background: #333333;
-            margin-top: 10px;
-            margin-bottom: 10px;
         }
         
         Text {
-            text: "Input Teks (Slint Native):";
+            text: "Input Text:";
             font-size: 14px;
-            font-weight: 600;
         }
         
         TextEdit {
             text <=> input_text;
-            placeholder-text: "Ketik sesuatu di sini...";
+            placeholder-text: "Ketik sesuatu...";
             height: 40px;
             border-radius: 8px;
             border-width: 1px;
-            border-color: #444444;
+            border-color: #444;
             background: #2a2a2a;
-            color: #ffffff;
+            color: #fff;
         }
         
         Text {
-            text: "Output: " + input_text;
+            text: "You typed: " + input_text;
             font-size: 14px;
-            wrap: word-wrap;
             color: #4caf50;
         }
         
         Rectangle {
             height: 1px;
             background: #333333;
-            margin-top: 10px;
-            margin-bottom: 10px;
         }
         
-        Text {
-            text: "Egui Canvas (Rust Native):";
-            font-size: 14px;
-            font-weight: 600;
-        }
-        
-        // Tombol untuk membuka Egui window
-        Button {
-            text: "Buka Egui Viewer";
-            clicked => {
-                show_egui = true;
-            }
-        }
-        
-        // Tombol untuk aksi lain
         HorizontalBox {
             spacing: 10px;
             Button {
-                text: "Clear Input";
+                text: "Counter: " + counter;
                 clicked => {
+                    counter += 1;
+                }
+            }
+            Button {
+                text: "Reset";
+                clicked => {
+                    counter = 0;
                     input_text = "";
                 }
             }
@@ -96,74 +80,18 @@ export component MainWindow inherits Window {
                     input_text = input_text.to-uppercase();
                 }
             }
-            Button {
-                text: "Lowercase";
-                clicked => {
-                    input_text = input_text.to-lowercase();
-                }
-            }
         }
         
         Rectangle {
             height: 1px;
             background: #333333;
-            margin-top: 10px;
-            margin-bottom: 10px;
         }
         
         Text {
-            text: "Info:";
-            font-size: 12px;
-            color: #888888;
-            wrap: word-wrap;
-        }
-        
-        Text {
-            text: "Aplikasi ini menggabungkan Slint (UI framework) dan Egui (immediate mode GUI). Slint untuk layout utama, Egui untuk canvas/graph custom.";
+            text: "Info: Aplikasi Slint berjalan di Android!";
             font-size: 11px;
-            color: #666666;
+            color: #666;
             wrap: word-wrap;
-        }
-    }
-    
-    // Popup window untuk Egui
-    if show_egui : Dialog {
-        title: "Egui Canvas Viewer";
-        width: 500px;
-        height: 400px;
-        
-        VerticalBox {
-            EguiCanvas {
-                width: 100%;
-                height: 300px;
-            }
-            
-            Button {
-                text: "Tutup";
-                clicked => {
-                    show_egui = false;
-                }
-            }
-        }
-    }
-}
-
-// Custom widget untuk embed Egui
-export component EguiCanvas {
-    width: 100%;
-    height: 100%;
-    
-    // Placeholder - akan di-render oleh Rust melalui egui
-    Rectangle {
-        background: #1e1e1e;
-        border-radius: 8px;
-        
-        Text {
-            text: "Egui Canvas Area";
-            font-size: 16px;
-            horizontal-alignment: center;
-            vertical-alignment: center;
-            color: #888888;
         }
     }
 }
