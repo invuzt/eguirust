@@ -10,6 +10,8 @@ fn android_main(app: AndroidApp) {
         android_logger::Config::default().with_max_level(log::LevelFilter::Info)
     );
 
+    slint::platform::set_platform(Box::new(slint::platform::android::AndroidPlatform::new(app))).unwrap();
+
     let main_window = MainWindow::new().unwrap();
     main_window.run().unwrap();
 }
