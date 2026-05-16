@@ -1,49 +1,21 @@
 #![cfg(target_os = "android")]
-mod app;
 
-use eframe::egui;
+mod app;
+mod graph;
+
 use android_activity::AndroidApp;
+use egui_and_android::Application;
 
 #[no_mangle]
 fn android_main(app: AndroidApp) {
     android_logger::init_once(
-        android_logger::Config::default().with_max_level(log::LevelFilter::Info)
+        android_logger::Config::default()
+            .with_min_level(log::LevelFilter::Info)
+            .with_tag("vuzt"),
     );
 
-    let mut options = eframe::NativeOptions {
-        renderer: eframe::Renderer::Glow,
-        ..Default::default()
-    };
+    let app_state = app::HomeApp::default();
+    let mut application = Application::new(app, app_state);
     
-    let app_clone = app.clone();
-    options.event_loop_builder = Some(Box::new(move |builder| {
-        use winit::platform::android::EventLoopBuilderExtAndroid;
-        builder.with_android_app(app_clone);
-    }));
-
-    let _ = eframe::run_native(
-        "Vuzt Dashboard",
-        options,
-        Box::new(|cc| {
-            // Load custom font dari assets (include_bytes untuk compile time)
-            let mut fonts = egui::FontDefinitions::default();
-            
-            // Gunakan include_bytes untuk memasukkan font ke binary
-            let font_data = include_bytes!("../assets/font.ttf").to_vec();
-            fonts.font_data.insert(
-                "custom_font".to_owned(),
-                egui::FontData::from_owned(font_data),
-            );
-            fonts.families.get_mut(&egui::FontFamily::Proportional)
-                .unwrap()
-                .insert(0, "custom_font".to_owned());
-            fonts.families.get_mut(&egui::FontFamily::Monospace)
-                .unwrap()
-                .insert(0, "custom_font".to_owned());
-            
-            cc.egui_ctx.set_fonts(fonts);
-            
-            Box::new(app::DashboardApp::default())
-        }),
-    );
+    application.run();
 }
