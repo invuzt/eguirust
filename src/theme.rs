@@ -27,4 +27,33 @@ pub fn apply_custom_style(ctx: &egui::Context) {
     
     ctx.set_visuals(visuals);
     ctx.set_style(style);
+    
+    // Load custom font dari assets
+    load_custom_font(ctx);
+}
+
+fn load_custom_font(ctx: &egui::Context) {
+    let mut fonts = egui::FontDefinitions::default();
+    
+    // Ambil font default yang sudah ada
+    let current_fonts = ctx.fonts(|f| f.fonts.clone());
+    fonts = current_fonts;
+    
+    // Coba load font.ttf dari assets
+    let font_data = include_bytes!("../assets/font.ttf").to_vec();
+    fonts.font_data.insert(
+        "custom_font".to_owned(),
+        egui::FontData::from_owned(font_data),
+    );
+    
+    // Set custom font sebagai default untuk Proportional
+    fonts.families.entry(egui::FontFamily::Proportional)
+        .or_insert_with(Vec::new)
+        .insert(0, "custom_font".to_owned());
+    
+    fonts.families.entry(egui::FontFamily::Monospace)
+        .or_insert_with(Vec::new)
+        .insert(0, "custom_font".to_owned());
+    
+    ctx.set_fonts(fonts);
 }
