@@ -7,13 +7,12 @@ edition = "2021"
 crate-type = ["cdylib"]
 
 [dependencies]
-egui = "0.32"
-egui-android = { git = "https://github.com/sagebind/egui-android" }
-android-activity = "0.6"
+eframe = { version = "0.27", default-features = false, features = ["android-native-activity", "glow"] }
+winit = { version = "0.29", features = ["android-native-activity"] }
+android-activity = { version = "0.5", features = ["native-activity"] }
 log = "0.4"
-android_logger = "0.15"
-egui_plot = "0.32"
-rand = "0.8"
+android_logger = "0.13"
+egui_keyboard = "0.5"
 
 [package.metadata.android]
 package = "com.cak.vuzt"
@@ -24,9 +23,6 @@ min_sdk_version = 21
 
 [[package.metadata.android.uses_permission]]
 name = "android.permission.INTERNET"
-
-[[package.metadata.android.uses_permission]]
-name = "android.permission.VIBRATE"
 
 [package.metadata.android.signing.release]
 path = "debug.keystore"

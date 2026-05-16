@@ -1,21 +1,27 @@
-use egui::Context;
+use eframe::egui;
+use egui_keyboard::{Keyboard, KeyboardLayout};
 
-pub struct HomeApp {
-    input_text: String,
-    show_graph: bool,
+pub struct MyApp {
+    text: String,
+    show_keyboard: bool,
+    keyboard: Keyboard,
 }
 
-impl Default for HomeApp {
+impl Default for MyApp {
     fn default() -> Self {
         Self {
-            input_text: String::new(),
-            show_graph: false,
+            text: String::new(),
+            show_keyboard: false,
+            keyboard: Keyboard::new(KeyboardLayout::AZERTY),
         }
     }
 }
 
-impl HomeApp {
-    pub fn update(&mut self, ctx: &Context) {
+impl eframe::App for MyApp {
+    fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
+        // Update keyboard setiap frame
+        self.keyboard.update(ctx);
+        
         let screen_rect = ctx.input(|i| i.screen_rect());
         let screen_height = screen_rect.height();
         
@@ -23,50 +29,63 @@ impl HomeApp {
             ui.vertical_centered(|ui| {
                 ui.add_space(screen_height * 0.15);
                 
-                ui.heading("Vuzt Dashboard");
+                ui.heading("Vuzt Keyboard Demo");
                 ui.add_space(20.0);
                 
-                ui.label("Input Teks dengan Keyboard Native Android:");
+                ui.label("Input Teks dengan Virtual Keyboard:");
                 ui.add_space(10.0);
                 
-                // TextEdit dengan keyboard native Android
-                let text_edit = egui::TextEdit::singleline(&mut self.input_text)
-                    .hint_text("Ketik sesuatu di sini...")
+                // Text field
+                let text_edit = egui::TextEdit::singleline(&mut self.text)
+                    .hint_text("Ketik di sini...")
                     .desired_width(300.0)
                     .font(egui::FontId::proportional(18.0));
                 
-                ui.add(text_edit);
+                if ui.add(text_edit).clicked() {
+                    self.show_keyboard = true;
+                }
                 
                 ui.add_space(20.0);
                 
-                if !self.input_text.is_empty() {
-                    ui.label(format("Anda mengetik: {}", self.input_text));
+                if !self.text.is_empty() {
+                    ui.label(format("Output: {}", self.text));
                 }
                 
                 ui.add_space(30.0);
                 
-                if ui.button("Lihat Grafik").clicked() {
-                    self.show_graph = true;
+                // Tombol untuk membuka keyboard
+                if ui.button("Buka Keyboard").clicked() {
+                    self.show_keyboard = true;
                 }
                 
-                ui.add_space(20.0);
+                ui.add_space(10.0);
                 
                 if ui.button("Clear").clicked() {
-                    self.input_text.clear();
+                    self.text.clear();
                 }
             });
         });
-    }
-    
-    pub fn show_graph(&self) -> bool {
-        self.show_graph
-    }
-    
-    pub fn set_show_graph(&mut self, value: bool) {
-        self.show_graph = value;
-    }
-    
-    pub fn get_input_text(&self) -> &str {
-        &self.input_text
+        
+        // Tampilkan keyboard jika diperlukan
+        if self.show_keyboard {
+            egui::Window::new("Keyboard")
+                .collapsible(false)
+                .resizable(false)
+                .title_bar(true)
+                .anchor(egui::Align2::CENTER_BOTTOM, [0.0, -10.0])
+                .show(ctx, |ui| {
+                    self.keyboard.show_ui(ui);
+                    
+                    ui.add_space(10.0);
+                    ui.horizontal(|ui| {
+                        if ui.button("Tutup").clicked() {
+                            self.show_keyboard = false;
+                        }
+                        if ui.button("Clear Input").clicked() {
+                            self.text.clear();
+                        }
+                    });
+                });
+        }
     }
 }
