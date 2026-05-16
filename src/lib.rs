@@ -1,5 +1,6 @@
 #![cfg(target_os = "android")]
 mod app;
+mod theme;
 
 use android_activity::AndroidApp;
 
@@ -21,8 +22,11 @@ fn android_main(app: AndroidApp) {
     }));
 
     let _ = eframe::run_native(
-        "Vuzt Keyboard Demo",
+        "Vuzt App",
         options,
-        Box::new(|_cc| Box::new(app::MyApp::default())),
+        Box::new(|cc| {
+            theme::apply_custom_style(&cc.egui_ctx);
+            Box::new(app::MyApp::default())
+        }),
     );
 }

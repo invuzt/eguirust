@@ -34,7 +34,11 @@ impl eframe::App for MyApp {
                     .desired_width(300.0)
                     .font(egui::FontId::proportional(18.0));
                 
-                ui.add(text_edit);
+                let response = ui.add(text_edit);
+                
+                if response.clicked() {
+                    self.show_keyboard = true;
+                }
                 
                 ui.add_space(20.0);
                 
@@ -50,7 +54,7 @@ impl eframe::App for MyApp {
             });
         });
         
-        // Custom keyboard sederhana
+        // Custom keyboard
         if self.show_keyboard {
             let screen_width = screen_rect.width();
             let key_width = screen_width / 10.0;
