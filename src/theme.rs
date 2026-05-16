@@ -3,7 +3,7 @@ use eframe::egui;
 pub fn apply_custom_style(ctx: &egui::Context) {
     let mut style = (*ctx.style()).clone();
     
-    // Font styling
+    // Font styling - pakai font default egui
     style.text_styles = [
         (egui::TextStyle::Heading, egui::FontId::proportional(24.0)),
         (egui::TextStyle::Name("Heading2".into()), egui::FontId::proportional(20.0)),
@@ -28,29 +28,5 @@ pub fn apply_custom_style(ctx: &egui::Context) {
     ctx.set_visuals(visuals);
     ctx.set_style(style);
     
-    load_custom_font(ctx);
-}
-
-fn load_custom_font(ctx: &egui::Context) {
-    // Start from default fonts that already include egui's built-in fonts
-    let mut fonts = egui::FontDefinitions::default();
-    
-    // Try to load custom font from assets (Noto Emoji)
-    let font_data = include_bytes!("../assets/font.ttf").to_vec();
-    fonts.font_data.insert(
-        "noto_emoji".to_owned(),
-        egui::FontData::from_owned(font_data),
-    );
-    
-    // Add custom font to Proportional and Monospace families as a secondary option
-    // This way if custom font fails, default egui fonts still work
-    if let Some(proportional_family) = fonts.families.get_mut(&egui::FontFamily::Proportional) {
-        proportional_family.push("noto_emoji".to_owned());
-    }
-    
-    if let Some(monospace_family) = fonts.families.get_mut(&egui::FontFamily::Monospace) {
-        monospace_family.push("noto_emoji".to_owned());
-    }
-    
-    ctx.set_fonts(fonts);
+    // Tidak pakai custom font - pakai default egui saja (sudah support emoji)
 }
