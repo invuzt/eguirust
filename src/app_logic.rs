@@ -8,10 +8,11 @@ pub struct Item {
     pub created_at: String,
 }
 
-#[derive(PartialEq)]
-pub enum FieldType {
+#[derive(PartialEq, Clone, Copy)]
+pub enum ActiveField {
     Name,
     Description,
+    None,
 }
 
 pub struct AppState {
@@ -26,8 +27,7 @@ pub struct AppState {
     pub form_desc: String,
     pub edit_mode: bool,
     pub edit_id: u32,
-    pub selected_field: FieldType,
-    pub temp_input: String,
+    pub active_field: ActiveField,  // Track field yang aktif
 }
 
 impl AppState {
@@ -57,8 +57,7 @@ impl AppState {
             form_desc: String::new(),
             edit_mode: false,
             edit_id: 0,
-            selected_field: FieldType::Name,
-            temp_input: String::new(),
+            active_field: ActiveField::None,
         }
     }
 
@@ -106,7 +105,6 @@ impl AppState {
             if let Some(selected) = self.selected_item {
                 if selected == index {
                     self.selected_item = None;
-                    self.show_kb = false;
                 } else if selected > index {
                     self.selected_item = Some(selected - 1);
                 }
@@ -125,47 +123,53 @@ impl AppState {
         self.selected_item = None;
     }
     
-    pub fn add_char_to_selected(&mut self, ch: char) {
-        match self.selected_field {
-            FieldType::Name => self.form_name.push(ch),
-            FieldType::Description => self.form_desc.push(ch),
+    // Keyboard functions - now write to active field
+    pub fn keyboard_add_char(&mut self, ch: char) {
+        match self.active_field {
+            ActiveField::Name => self.form_name.push(ch),
+            ActiveField::Description => self.form_desc.push(ch),
+            ActiveField::None => (),
         }
     }
     
-    pub fn delete_last_word(&mut self) {
-        match self.selected_field {
-            FieldType::Name => {
+    pub fn keyboard_backspace(&mut self) {
+        match self.active_field {
+            ActiveField::Name => { self.form_name.pop(); },
+            ActiveField::Description => { self.form_desc.pop(); },
+            ActiveField::None => (),
+        }
+    }
+    
+    pub fn keyboard_delete_word(&mut self) {
+        match self.active_field {
+            ActiveField::Name => {
                 if let Some(last_space) = self.form_name.rfind(' ') {
                     self.form_name.truncate(last_space);
                 } else {
                     self.form_name.clear();
                 }
             },
-            FieldType::Description => {
+            ActiveField::Description => {
                 if let Some(last_space) = self.form_desc.rfind(' ') {
                     self.form_desc.truncate(last_space);
                 } else {
                     self.form_desc.clear();
                 }
             },
+            ActiveField::None => (),
         }
     }
     
-    pub fn delete_last_char(&mut self) {
-        match self.selected_field {
-            FieldType::Name => {
-                self.form_name.pop();
-            },
-            FieldType::Description => {
-                self.form_desc.pop();
-            },
+    pub fn keyboard_add_space(&mut self) {
+        match self.active_field {
+            ActiveField::Name => self.form_name.push(' '),
+            ActiveField::Description => self.form_desc.push(' '),
+            ActiveField::None => (),
         }
     }
     
-    pub fn add_space(&mut self) {
-        match self.selected_field {
-            FieldType::Name => self.form_name.push(' '),
-            FieldType::Description => self.form_desc.push(' '),
-        }
+    pub fn set_active_field(&mut self, field: ActiveField) {
+        self.active_field = field;
+        self.show_kb = true;
     }
 }

@@ -24,10 +24,6 @@ fn android_main(app: AndroidApp) {
         use winit::platform::android::EventLoopBuilderExtAndroid;
         builder.with_android_app(app_clone);
     }));
-    
-    // Set default window size untuk Android
-    options.viewport = egui::ViewportBuilder::default()
-        .with_inner_size([720.0, 1280.0]);
 
     let state = Arc::new(Mutex::new(app_logic::AppState::new()));
     let state_inner = state.clone();
@@ -37,17 +33,6 @@ fn android_main(app: AndroidApp) {
         options,
         Box::new(move |cc| {
             crate::css::apply_custom_style(&cc.egui_ctx);
-
-            let mut fonts = egui::FontDefinitions::default();
-            fonts.font_data.insert(
-                "custom_font".to_owned(),
-                egui::FontData::from_static(include_bytes!("../assets/font.ttf")),
-            );
-            fonts.families.get_mut(&egui::FontFamily::Proportional)
-                .unwrap()
-                .insert(0, "custom_font".to_owned());
-            cc.egui_ctx.set_fonts(fonts);
-
             Box::new(VuztApp { state: state_inner }) as Box<dyn eframe::App>
         }),
     );
@@ -56,20 +41,12 @@ fn android_main(app: AndroidApp) {
 impl eframe::App for VuztApp {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
         let mut state = self.state.lock().unwrap();
-        
-        // Layout utama dengan padding top untuk status bar
-        egui::TopBottomPanel::top("status_bar_filler")
-            .frame(egui::Frame::none().fill(egui::Color32::TRANSPARENT))
-            .show(ctx, |ui| {
-                ui.add_space(25.0); // Space untuk status bar Android
-            });
-        
         crate::app_view::render_ui(ctx, &mut state);
 
         if state.show_kb {
-            egui::TopBottomPanel::bottom("virtual_keyboard")
+            egui::TopBottomPanel::bottom("keyboard")
                 .resizable(false)
-                .default_height(280.0)
+                .default_height(250.0)
                 .show(ctx, |ui| {
                     crate::keyboard::render_keyboard(ui, &mut state);
                 });
