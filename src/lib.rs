@@ -58,9 +58,9 @@ impl eframe::App for VuztApp {
             egui::TopBottomPanel::bottom("virtual_keyboard")
                 .resizable(false)
                 .show(ctx, |ui| {
-                    ui.add_space(10.0);
+                    ui.add_space(5.0);
                     crate::keyboard::render_keyboard(ui, &mut state);
-                    ui.add_space(10.0);
+                    ui.add_space(5.0);
                 });
         }
     }

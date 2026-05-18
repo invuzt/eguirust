@@ -8,6 +8,12 @@ pub struct Item {
     pub created_at: String,
 }
 
+#[derive(PartialEq)]
+pub enum FieldType {
+    Name,
+    Description,
+}
+
 pub struct AppState {
     pub items: Vec<Item>,
     pub next_id: u32,
@@ -20,6 +26,8 @@ pub struct AppState {
     pub form_desc: String,
     pub edit_mode: bool,
     pub edit_id: u32,
+    pub selected_field: FieldType,
+    pub temp_input: String,
 }
 
 impl AppState {
@@ -49,10 +57,11 @@ impl AppState {
             form_desc: String::new(),
             edit_mode: false,
             edit_id: 0,
+            selected_field: FieldType::Name,
+            temp_input: String::new(),
         }
     }
 
-    // CREATE
     pub fn create_item(&mut self) {
         if !self.form_name.is_empty() {
             let now = chrono::Local::now().format("%Y-%m-%d").to_string();
@@ -67,7 +76,6 @@ impl AppState {
         }
     }
 
-    // UPDATE
     pub fn start_edit(&mut self, index: usize) {
         if let Some(item) = self.items.get(index) {
             self.form_name = item.name.clone();
@@ -92,7 +100,6 @@ impl AppState {
         self.selected_item = None;
     }
     
-    // DELETE
     pub fn delete_item(&mut self, index: usize) {
         if index < self.items.len() {
             self.items.remove(index);
@@ -116,5 +123,49 @@ impl AppState {
         self.clear_form();
         self.edit_mode = false;
         self.selected_item = None;
+    }
+    
+    pub fn add_char_to_selected(&mut self, ch: char) {
+        match self.selected_field {
+            FieldType::Name => self.form_name.push(ch),
+            FieldType::Description => self.form_desc.push(ch),
+        }
+    }
+    
+    pub fn delete_last_word(&mut self) {
+        match self.selected_field {
+            FieldType::Name => {
+                if let Some(last_space) = self.form_name.rfind(' ') {
+                    self.form_name.truncate(last_space);
+                } else {
+                    self.form_name.clear();
+                }
+            },
+            FieldType::Description => {
+                if let Some(last_space) = self.form_desc.rfind(' ') {
+                    self.form_desc.truncate(last_space);
+                } else {
+                    self.form_desc.clear();
+                }
+            },
+        }
+    }
+    
+    pub fn delete_last_char(&mut self) {
+        match self.selected_field {
+            FieldType::Name => {
+                self.form_name.pop();
+            },
+            FieldType::Description => {
+                self.form_desc.pop();
+            },
+        }
+    }
+    
+    pub fn add_space(&mut self) {
+        match self.selected_field {
+            FieldType::Name => self.form_name.push(' '),
+            FieldType::Description => self.form_desc.push(' '),
+        }
     }
 }
