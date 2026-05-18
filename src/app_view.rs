@@ -1,5 +1,5 @@
 use eframe::egui;
-use crate::app_logic::AppState;
+use crate::app_logic::{AppState, FieldType};
 
 pub fn render_ui(ctx: &egui::Context, state: &mut AppState) {
     egui::TopBottomPanel::top("header")
