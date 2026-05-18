@@ -1,76 +1,128 @@
 use eframe::egui;
 
-pub struct Agent {
+#[derive(Clone)]
+pub struct Item {
+    pub id: u32,
     pub name: String,
-    pub pos: egui::Pos2,
-    pub color: egui::Color32,
-}
-
-pub struct Connection {
-    pub from: usize,
-    pub to: usize,
-    pub message: String,
+    pub description: String,
+    pub created_at: String,
 }
 
 pub struct AppState {
-    pub agents: Vec<Agent>,
-    pub connections: Vec<Connection>,
-    pub selected_agent: Option<usize>,
-    pub link_source: Option<usize>,
+    pub items: Vec<Item>,
+    pub next_id: u32,
+    pub selected_item: Option<usize>,
     pub show_kb: bool,
     pub is_running: bool,
-    // Navigasi Canvas
     pub view_offset: egui::Vec2,
     pub zoom_factor: f32,
+    pub form_name: String,
+    pub form_desc: String,
+    pub edit_mode: bool,
+    pub edit_id: u32,
 }
 
 impl AppState {
     pub fn new() -> Self {
         Self {
-            agents: Vec::new(),
-            connections: Vec::new(),
-            selected_agent: None,
-            link_source: None,
+            items: vec![
+                Item {
+                    id: 1,
+                    name: "Sample Item 1".to_string(),
+                    description: "This is a sample description".to_string(),
+                    created_at: "2024-01-01".to_string(),
+                },
+                Item {
+                    id: 2,
+                    name: "Sample Item 2".to_string(),
+                    description: "Another sample item".to_string(),
+                    created_at: "2024-01-02".to_string(),
+                },
+            ],
+            next_id: 3,
+            selected_item: None,
             show_kb: false,
             is_running: false,
             view_offset: egui::vec2(0.0, 0.0),
             zoom_factor: 1.0,
+            form_name: String::new(),
+            form_desc: String::new(),
+            edit_mode: false,
+            edit_id: 0,
         }
     }
 
-    pub fn add_agent(&mut self) {
-        let id = self.agents.len();
-        // Spawn relatif terhadap view agar muncul di tengah layar yang terlihat
-        let spawn_pos = egui::pos2(150.0, 300.0);
-        self.agents.push(Agent {
-            name: format!("AGENT_{}", id),
-            pos: spawn_pos,
-            color: egui::Color32::from_rgb(0, 120, 255),
-        });
+    // CREATE
+    pub fn create_item(&mut self) {
+        if !self.form_name.is_empty() {
+            let now = chrono::Local::now().format("%Y-%m-%d").to_string();
+            self.items.push(Item {
+                id: self.next_id,
+                name: self.form_name.clone(),
+                description: self.form_desc.clone(),
+                created_at: now,
+            });
+            self.next_id += 1;
+            self.clear_form();
+        }
     }
 
-    pub fn spawn_child(&mut self, parent_idx: usize) {
-        let parent_pos = self.agents[parent_idx].pos;
-        let id = self.agents.len();
-        let new_pos = parent_pos + egui::vec2(150.0, 0.0);
-        self.agents.push(Agent {
-            name: format!("AGENT_{}", id),
-            pos: new_pos,
-            color: egui::Color32::from_rgb(0, 200, 150),
-        });
-        self.connections.push(Connection { from: parent_idx, to: id, message: "Sync".to_string() });
+    // READ - get all items (already have items vec)
+    
+    // UPDATE
+    pub fn start_edit(&mut self, index: usize) {
+        if let Some(item) = self.items.get(index) {
+            self.form_name = item.name.clone();
+            self.form_desc = item.description.clone();
+            self.edit_mode = true;
+            self.edit_id = item.id;
+            self.selected_item = Some(index);
+        }
     }
-
-    pub fn delete_selected(&mut self) {
-        if let Some(idx) = self.selected_agent {
-            self.agents.remove(idx);
-            self.connections.retain(|c| c.from != idx && c.to != idx);
-            for c in &mut self.connections {
-                if c.from > idx { c.from -= 1; }
-                if c.to > idx { c.to -= 1; }
+    
+    pub fn update_item(&mut self) {
+        if let Some(index) = self.selected_item {
+            if let Some(item) = self.items.get_mut(index) {
+                if item.id == self.edit_id {
+                    item.name = self.form_name.clone();
+                    item.description = self.form_desc.clone();
+                }
             }
-            self.selected_agent = None;
-            self.show_kb = false;
         }
+        self.clear_form();
+        self.edit_mode = false;
+        self.selected_item = None;
+    }
+    
+    // DELETE
+    pub fn delete_item(&mut self, index: usize) {
+        if index < self.items.len() {
+            self.items.remove(index);
+            if let Some(selected) = self.selected_item {
+                if selected == index {
+                    self.selected_item = None;
+                    self.show_kb = false;
+                } else if selected > index {
+                    self.selected_item = Some(selected - 1);
+                }
+            }
+        }
+    }
+    
+    pub fn clear_form(&mut self) {
+        self.form_name.clear();
+        self.form_desc.clear();
+    }
+    
+    pub fn cancel_edit(&mut self) {
+        self.clear_form();
+        self.edit_mode = false;
+        self.selected_item = None;
+    }
+    
+    pub fn get_current_date(&self) -> String {
+        chrono::Local::now().format("%Y-%m-%d").to_string()
     }
 }
+
+// Add chrono dependency
