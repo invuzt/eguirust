@@ -7,6 +7,14 @@ pub fn render_keyboard(ui: &mut egui::Ui, state: &mut AppState) {
     ui.vertical_centered(|ui| {
         ui.add_space(8.0);
         ui.group(|ui| {
+            // Target input field indicator
+            if state.edit_mode {
+                ui.label(egui::RichText::new("✏️ Editing item name").color(egui::Color32::BLUE));
+            } else {
+                ui.label(egui::RichText::new("📝 Typing item name").color(egui::Color32::GREEN));
+            }
+            ui.add_space(5.0);
+            
             let rows = [
                 vec!["1","2","3","4","5","6","7","8","9","0","-","="],
                 vec!["Q","W","E","R","T","Y","U","I","O","P","[","]"],
@@ -21,11 +29,7 @@ pub fn render_keyboard(ui: &mut egui::Ui, state: &mut AppState) {
                             if !state.edit_mode {
                                 state.form_name.push_str(key);
                             } else {
-                                if let Some(idx) = state.selected_item {
-                                    if let Some(item) = state.items.get_mut(idx) {
-                                        item.name.push_str(key);
-                                    }
-                                }
+                                state.form_name.push_str(key);
                             }
                         }
                     }
@@ -38,11 +42,7 @@ pub fn render_keyboard(ui: &mut egui::Ui, state: &mut AppState) {
                     if !state.edit_mode {
                         state.form_name.pop();
                     } else {
-                        if let Some(idx) = state.selected_item {
-                            if let Some(item) = state.items.get_mut(idx) {
-                                item.name.pop();
-                            }
-                        }
+                        state.form_name.pop();
                     }
                 }
                 
@@ -50,11 +50,7 @@ pub fn render_keyboard(ui: &mut egui::Ui, state: &mut AppState) {
                     if !state.edit_mode {
                         state.form_name.push(' ');
                     } else {
-                        if let Some(idx) = state.selected_item {
-                            if let Some(item) = state.items.get_mut(idx) {
-                                item.name.push(' ');
-                            }
-                        }
+                        state.form_name.push(' ');
                     }
                 }
                 

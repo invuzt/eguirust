@@ -22,60 +22,57 @@ pub fn render_ui(ctx: &egui::Context, state: &mut AppState) {
         .show(ctx, |ui| {
             ui.horizontal(|ui| {
                 // LEFT PANEL - Form CRUD
-                ui.vertical()
-                    .constrained()
-                    .min_width(300.0)
-                    .max_width(400.0)
-                    .show(ui, |ui| {
+                ui.vertical(|ui| {
+                    ui.set_min_width(300.0);
+                    ui.add_space(10.0);
+                    ui.group(|ui| {
+                        ui.heading(if state.edit_mode { "✏️ EDIT ITEM" } else { "➕ CREATE NEW ITEM" });
                         ui.add_space(10.0);
-                        ui.group(|ui| {
-                            ui.heading(if state.edit_mode { "✏️ EDIT ITEM" } else { "➕ CREATE NEW ITEM" });
-                            ui.add_space(10.0);
-                            
-                            ui.label("📝 NAME:");
-                            let resp = ui.text_edit_singleline(&mut state.form_name);
-                            if resp.clicked() {
-                                state.show_kb = true;
-                            }
-                            
-                            ui.add_space(5.0);
-                            ui.label("📄 DESCRIPTION:");
-                            let resp = ui.text_edit_multiline(&mut state.form_desc);
-                            if resp.clicked() {
-                                state.show_kb = true;
-                            }
-                            
-                            ui.add_space(10.0);
-                            ui.horizontal(|ui| {
-                                if state.edit_mode {
-                                    if ui.button("✅ UPDATE").clicked() {
-                                        state.update_item();
-                                    }
-                                    if ui.button("❌ CANCEL").clicked() {
-                                        state.cancel_edit();
-                                    }
-                                } else {
-                                    if ui.button("💾 SAVE").clicked() {
-                                        state.create_item();
-                                    }
-                                }
-                            });
-                        });
+                        
+                        ui.label("📝 NAME:");
+                        let resp = ui.text_edit_singleline(&mut state.form_name);
+                        if resp.clicked() {
+                            state.show_kb = true;
+                        }
+                        
+                        ui.add_space(5.0);
+                        ui.label("📄 DESCRIPTION:");
+                        let resp = ui.text_edit_multiline(&mut state.form_desc);
+                        if resp.clicked() {
+                            state.show_kb = true;
+                        }
                         
                         ui.add_space(10.0);
-                        ui.group(|ui| {
-                            ui.heading("📊 STATISTICS");
-                            ui.label(format!("Total Items: {}", state.items.len()));
-                            if let Some(idx) = state.selected_item {
-                                if let Some(item) = state.items.get(idx) {
-                                    ui.separator();
-                                    ui.label("📌 SELECTED:");
-                                    ui.label(format!("ID: {}", item.id));
-                                    ui.label(format!("Name: {}", item.name));
+                        ui.horizontal(|ui| {
+                            if state.edit_mode {
+                                if ui.button("✅ UPDATE").clicked() {
+                                    state.update_item();
+                                }
+                                if ui.button("❌ CANCEL").clicked() {
+                                    state.cancel_edit();
+                                }
+                            } else {
+                                if ui.button("💾 SAVE").clicked() {
+                                    state.create_item();
                                 }
                             }
                         });
                     });
+                    
+                    ui.add_space(10.0);
+                    ui.group(|ui| {
+                        ui.heading("📊 STATISTICS");
+                        ui.label(format!("Total Items: {}", state.items.len()));
+                        if let Some(idx) = state.selected_item {
+                            if let Some(item) = state.items.get(idx) {
+                                ui.separator();
+                                ui.label("📌 SELECTED:");
+                                ui.label(format!("ID: {}", item.id));
+                                ui.label(format!("Name: {}", item.name));
+                            }
+                        }
+                    });
+                });
                 
                 ui.separator();
                 

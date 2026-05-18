@@ -67,8 +67,6 @@ impl AppState {
         }
     }
 
-    // READ - get all items (already have items vec)
-    
     // UPDATE
     pub fn start_edit(&mut self, index: usize) {
         if let Some(item) = self.items.get(index) {
@@ -119,10 +117,4 @@ impl AppState {
         self.edit_mode = false;
         self.selected_item = None;
     }
-    
-    pub fn get_current_date(&self) -> String {
-        chrono::Local::now().format("%Y-%m-%d").to_string()
-    }
 }
-
-// Add chrono dependency
