@@ -26,17 +26,17 @@ pub fn render_ui(ctx: &egui::Context, state: &mut AppState) {
                     ui.set_min_width(300.0);
                     ui.add_space(10.0);
                     ui.group(|ui| {
-                        ui.heading(if state.edit_mode { "✏️ EDIT ITEM" } else { "➕ CREATE NEW ITEM" });
+                        ui.heading(if state.edit_mode { "EDIT ITEM" } else { "CREATE NEW ITEM" });
                         ui.add_space(10.0);
                         
-                        ui.label("📝 NAME:");
+                        ui.label("NAME:");
                         let resp = ui.text_edit_singleline(&mut state.form_name);
                         if resp.clicked() {
                             state.show_kb = true;
                         }
                         
                         ui.add_space(5.0);
-                        ui.label("📄 DESCRIPTION:");
+                        ui.label("DESCRIPTION:");
                         let resp = ui.text_edit_multiline(&mut state.form_desc);
                         if resp.clicked() {
                             state.show_kb = true;
@@ -45,14 +45,14 @@ pub fn render_ui(ctx: &egui::Context, state: &mut AppState) {
                         ui.add_space(10.0);
                         ui.horizontal(|ui| {
                             if state.edit_mode {
-                                if ui.button("✅ UPDATE").clicked() {
+                                if ui.button("UPDATE").clicked() {
                                     state.update_item();
                                 }
-                                if ui.button("❌ CANCEL").clicked() {
+                                if ui.button("CANCEL").clicked() {
                                     state.cancel_edit();
                                 }
                             } else {
-                                if ui.button("💾 SAVE").clicked() {
+                                if ui.button("SAVE").clicked() {
                                     state.create_item();
                                 }
                             }
@@ -61,12 +61,12 @@ pub fn render_ui(ctx: &egui::Context, state: &mut AppState) {
                     
                     ui.add_space(10.0);
                     ui.group(|ui| {
-                        ui.heading("📊 STATISTICS");
+                        ui.heading("STATISTICS");
                         ui.label(format!("Total Items: {}", state.items.len()));
                         if let Some(idx) = state.selected_item {
                             if let Some(item) = state.items.get(idx) {
                                 ui.separator();
-                                ui.label("📌 SELECTED:");
+                                ui.label("SELECTED:");
                                 ui.label(format!("ID: {}", item.id));
                                 ui.label(format!("Name: {}", item.name));
                             }
@@ -81,29 +81,35 @@ pub fn render_ui(ctx: &egui::Context, state: &mut AppState) {
                     .auto_shrink([false; 2])
                     .show(ui, |ui| {
                         ui.add_space(10.0);
-                        ui.heading("📋 ITEMS LIST");
+                        ui.heading("ITEMS LIST");
                         ui.add_space(10.0);
                         
                         if state.items.is_empty() {
                             ui.colored_label(egui::Color32::GRAY, "No items yet. Create one!");
                         } else {
-                            for (i, item) in state.items.iter().enumerate() {
+                            let items_to_display: Vec<(usize, String, String, String)> = state.items
+                                .iter()
+                                .enumerate()
+                                .map(|(i, item)| (i, item.name.clone(), item.description.clone(), item.created_at.clone()))
+                                .collect();
+                            
+                            for (i, name, description, created_at) in items_to_display {
                                 ui.group(|ui| {
                                     ui.horizontal(|ui| {
                                         ui.vertical(|ui| {
-                                            ui.label(egui::RichText::new(&item.name).strong());
-                                            ui.label(egui::RichText::new(&item.description).weak());
-                                            ui.label(egui::RichText::new(format!("📅 {}", item.created_at)).small());
+                                            ui.label(egui::RichText::new(&name).strong());
+                                            ui.label(egui::RichText::new(&description).weak());
+                                            ui.label(egui::RichText::new(format!("Date: {}", created_at)).small());
                                         });
                                         
                                         ui.with_layout(egui::Layout::right_to_left(egui::Align::TOP), |ui| {
-                                            if ui.button("🗑️").on_hover_text("Delete").clicked() {
+                                            if ui.button("Delete").on_hover_text("Delete").clicked() {
                                                 state.delete_item(i);
                                             }
-                                            if ui.button("✏️").on_hover_text("Edit").clicked() {
+                                            if ui.button("Edit").on_hover_text("Edit").clicked() {
                                                 state.start_edit(i);
                                             }
-                                            if ui.button("👁️").on_hover_text("Select").clicked() {
+                                            if ui.button("Select").on_hover_text("Select").clicked() {
                                                 state.selected_item = Some(i);
                                             }
                                         });

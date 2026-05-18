@@ -7,11 +7,10 @@ pub fn render_keyboard(ui: &mut egui::Ui, state: &mut AppState) {
     ui.vertical_centered(|ui| {
         ui.add_space(8.0);
         ui.group(|ui| {
-            // Target input field indicator
             if state.edit_mode {
-                ui.label(egui::RichText::new("✏️ Editing item name").color(egui::Color32::BLUE));
+                ui.label(egui::RichText::new("Editing item name").color(egui::Color32::BLUE));
             } else {
-                ui.label(egui::RichText::new("📝 Typing item name").color(egui::Color32::GREEN));
+                ui.label(egui::RichText::new("Typing item name").color(egui::Color32::GREEN));
             }
             ui.add_space(5.0);
             
@@ -26,11 +25,7 @@ pub fn render_keyboard(ui: &mut egui::Ui, state: &mut AppState) {
                 ui.horizontal(|ui| {
                     for key in row {
                         if ui.add_sized(btn_size, egui::Button::new(key)).clicked() {
-                            if !state.edit_mode {
-                                state.form_name.push_str(key);
-                            } else {
-                                state.form_name.push_str(key);
-                            }
+                            state.form_name.push_str(key);
                         }
                     }
                 });
@@ -38,20 +33,12 @@ pub fn render_keyboard(ui: &mut egui::Ui, state: &mut AppState) {
             
             ui.add_space(10.0);
             ui.horizontal(|ui| {
-                if ui.add_sized([80.0, 35.0], egui::Button::new("⌫ BACK")).clicked() {
-                    if !state.edit_mode {
-                        state.form_name.pop();
-                    } else {
-                        state.form_name.pop();
-                    }
+                if ui.add_sized([80.0, 35.0], egui::Button::new("BACK")).clicked() {
+                    state.form_name.pop();
                 }
                 
                 if ui.add_sized([80.0, 35.0], egui::Button::new("SPACE")).clicked() {
-                    if !state.edit_mode {
-                        state.form_name.push(' ');
-                    } else {
-                        state.form_name.push(' ');
-                    }
+                    state.form_name.push(' ');
                 }
                 
                 if ui.add_sized([80.0, 35.0], egui::Button::new("CLOSE")).clicked() {
