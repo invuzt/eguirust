@@ -8,6 +8,6 @@ pub fn apply_custom_style(ctx: &egui::Context) {
     // Set style minimal
     let mut style = (*ctx.style()).clone();
     style.spacing.item_spacing = egui::vec2(8.0, 8.0);
-    style.spacing.window_padding = egui::vec2(8.0, 8.0);
+    style.spacing.window_margin = egui::Margin::same(8.0);
     ctx.set_style(style);
 }
